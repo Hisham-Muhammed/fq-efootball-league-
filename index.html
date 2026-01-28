@@ -7,231 +7,293 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
-        body { font-family: 'Space Grotesk', sans-serif; background-color: #0a0a0c; color: #ffffff; }
+        body { font-family: 'Space Grotesk', sans-serif; background-color: #0a0a0c; color: #ffffff; overflow-x: hidden; }
         .table-gradient { background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%); }
-        .active-row { background: rgba(14, 165, 233, 0.15) !important; border-left: 4px solid #0ea5e9; }
         .card-border { border: 1px solid rgba(255,255,255,0.1); }
         .manager-badge { background: linear-gradient(90deg, #0ea5e9 0%, #2563eb 100%); padding: 2px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; color: white; text-transform: uppercase; }
+        .season-tab { cursor: pointer; padding: 12px 15px; transition: all 0.3s; border-bottom: 2px solid transparent; color: #64748b; font-weight: bold; text-transform: uppercase; font-size: 11px; flex: 1; text-align: center; }
+        .season-tab.active { border-color: #0ea5e9; color: #0ea5e9; background: rgba(14, 165, 233, 0.05); }
+        .live-stat-card { background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <header class="max-w-7xl mx-auto mb-10 flex flex-col md:flex-row justify-between items-start md:items-end border-b border-white/10 pb-6 gap-4">
+    <header class="max-w-7xl mx-auto mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-end border-b border-white/10 pb-6 gap-6">
         <div>
             <div class="flex items-center gap-3 mb-1">
-                <h1 class="text-4xl font-bold tracking-tighter italic text-sky-500">eFOOTBALL 2026</h1>
-                <span class="manager-badge">FQ OFFICIAL LEAGUE</span>
+                <h1 class="text-4xl font-bold tracking-tighter italic text-sky-500 uppercase">FQ eFootball</h1>
+                <span class="manager-badge">Official League</span>
             </div>
             <div class="flex flex-col gap-1">
                 <p class="text-slate-500 font-medium text-sm tracking-widest uppercase">League Director: <span class="text-white font-bold">Sinan</span></p>
-                <p class="text-sky-400/80 font-bold text-[11px] tracking-widest uppercase">Organized by FQ Organizing Committee</p>
+                <p class="text-sky-400/80 font-bold text-[11px] tracking-widest uppercase text-xs">Organized by FQ Organizing Committee</p>
             </div>
         </div>
-        <div id="filter-badge" class="hidden">
-            <div class="bg-sky-600/20 border border-sky-500/50 text-[10px] font-bold px-4 py-2 rounded flex items-center gap-3">
-                <span class="text-sky-400">ANALYZING:</span> <span id="filtered-name" class="text-white"></span>
-                <button onclick="clearFilter()" class="hover:text-red-400 ml-2">✕ RESET</button>
-            </div>
+        <div class="flex bg-white/5 rounded-t-lg overflow-hidden w-full lg:w-auto">
+            <div id="tab-s2" onclick="switchSeason(2)" class="season-tab active">Season 2 (Live)</div>
+            <div id="tab-s1" onclick="switchSeason(1)" class="season-tab">Season 1</div>
+            <div id="tab-all" onclick="switchSeason('all')" class="season-tab">Global Records</div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <!-- STANDINGS -->
-        <div class="lg:col-span-7">
+    <main class="max-w-7xl mx-auto">
+        <!-- SEASON 2 VIEW -->
+        <div id="season-2-view" class="space-y-6">
+            <!-- S2 LIVE ANALYTICS -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="live-stat-card">
+                    <p class="text-[9px] uppercase text-sky-500 font-bold tracking-widest mb-1">Top Offense (S2)</p>
+                    <h4 id="s2-stat-offense" class="text-sm font-bold text-white truncate">-</h4>
+                    <p id="s2-stat-offense-val" class="text-[10px] text-slate-500">0 Goals</p>
+                </div>
+                <div class="live-stat-card">
+                    <p class="text-[9px] uppercase text-rose-500 font-bold tracking-widest mb-1">Best Defense (S2)</p>
+                    <h4 id="s2-stat-defense" class="text-sm font-bold text-white truncate">-</h4>
+                    <p id="s2-stat-defense-val" class="text-[10px] text-slate-500">0 Conceded</p>
+                </div>
+                <div class="live-stat-card">
+                    <p class="text-[9px] uppercase text-emerald-500 font-bold tracking-widest mb-1">Most Wins (S2)</p>
+                    <h4 id="s2-stat-wins" class="text-sm font-bold text-white truncate">-</h4>
+                    <p id="s2-stat-wins-val" class="text-[10px] text-slate-500">0 Wins</p>
+                </div>
+                <div class="live-stat-card">
+                    <p class="text-[9px] uppercase text-amber-500 font-bold tracking-widest mb-1">Goal Difference</p>
+                    <h4 id="s2-stat-gd" class="text-sm font-bold text-white truncate">-</h4>
+                    <p id="s2-stat-gd-val" class="text-[10px] text-slate-500">0 GD</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-7">
+                    <div class="table-gradient rounded-xl card-border overflow-hidden shadow-2xl">
+                        <div class="p-4 bg-white/5 border-b border-white/10 flex justify-between items-center">
+                            <h2 class="text-xs font-bold uppercase tracking-widest text-slate-400">Live Standings</h2>
+                            <span class="text-[10px] font-bold text-sky-400 animate-pulse">● LIVE UPDATING</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead>
+                                    <tr class="text-slate-500 text-[10px] uppercase border-b border-white/5 bg-black/40">
+                                        <th class="p-4">Pos</th>
+                                        <th class="p-4">Club</th>
+                                        <th class="p-4 text-center">P</th>
+                                        <th class="p-4 text-center">GD</th>
+                                        <th class="p-4 text-center text-white">Pts</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="standings-body-s2"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-5">
+                    <div class="card-border rounded-xl flex flex-col h-[500px] bg-white/[0.02] shadow-2xl">
+                        <div class="p-4 bg-white/5 border-b border-white/10 flex justify-between items-center">
+                            <h2 class="text-xs font-bold uppercase tracking-widest text-slate-400">Fixtures</h2>
+                            <select id="day-select" onchange="refreshS2()" class="bg-zinc-900 text-[10px] font-bold border border-white/10 rounded px-2 py-1 outline-none text-sky-500"></select>
+                        </div>
+                        <div id="match-container-s2" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEASON 1 VIEW -->
+        <div id="season-1-view" class="hidden">
             <div class="table-gradient rounded-xl card-border overflow-hidden shadow-2xl">
-                <div class="p-4 bg-white/5 border-b border-white/10">
-                    <h2 class="text-xs font-bold uppercase tracking-widest text-slate-400">Championship Standings</h2>
+                <div class="p-4 bg-white/5 border-b border-white/10 flex justify-between items-center">
+                    <h2 class="text-xs font-bold uppercase tracking-widest text-slate-400 italic">Season 1 History</h2>
+                    <span class="text-[10px] text-emerald-500 font-bold uppercase">Final Winner: Imad 🏆</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
-                        <thead>
-                            <tr class="text-slate-500 text-[10px] uppercase border-b border-white/5 bg-black/40">
-                                <th class="p-4">Pos</th>
-                                <th class="p-4">Club</th>
-                                <th class="p-4 text-center">P</th>
-                                <th class="p-4 text-center">GF</th>
-                                <th class="p-4 text-center">GA</th>
-                                <th class="p-4 text-center">GD</th>
-                                <th class="p-4 text-center text-white">Pts</th>
-                            </tr>
-                        </thead>
-                        <tbody id="standings-body"></tbody>
+                        <tbody id="standings-body-s1"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- FIXTURES -->
-        <div class="lg:col-span-5">
-            <div class="card-border rounded-xl flex flex-col h-[700px] bg-white/[0.02] shadow-2xl">
-                <div class="p-4 bg-white/5 border-b border-white/10 flex justify-between items-center">
-                    <div>
-                        <h2 class="text-xs font-bold uppercase tracking-widest text-slate-400">Match Schedule</h2>
-                        <p id="fixture-subtitle" class="text-[9px] text-slate-500 uppercase mt-0.5">FQ Tournament Path</p>
+        <!-- ALL TIME VIEW -->
+        <div id="all-time-view" class="hidden space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="table-gradient rounded-xl card-border overflow-hidden">
+                    <div class="p-3 bg-white/5 border-b border-white/10 flex items-center gap-2">
+                        <span class="text-emerald-500 text-lg font-bold">⚽</span>
+                        <h2 class="text-[10px] font-bold uppercase tracking-widest">Top Scorers (Total)</h2>
                     </div>
-                    <select id="day-select" onchange="refreshUI()" class="bg-zinc-900 text-[10px] font-bold border border-white/10 rounded px-2 py-1 outline-none text-sky-500">
-                    </select>
+                    <div id="top-scorers-list" class="divide-y divide-white/5"></div>
                 </div>
-                <div id="match-container" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+                <div class="table-gradient rounded-xl card-border overflow-hidden">
+                    <div class="p-3 bg-white/5 border-b border-white/10 flex items-center gap-2">
+                        <span class="text-rose-500 text-lg">🛡️</span>
+                        <h2 class="text-[10px] font-bold uppercase tracking-widest">Defensive Wall</h2>
+                    </div>
+                    <div id="top-defense-list" class="divide-y divide-white/5"></div>
+                </div>
+                <div class="table-gradient rounded-xl card-border overflow-hidden">
+                    <div class="p-3 bg-white/5 border-b border-white/10 flex items-center gap-2">
+                        <span class="text-amber-500 text-lg italic font-black">W%</span>
+                        <h2 class="text-[10px] font-bold uppercase tracking-widest">Win Ratio</h2>
+                    </div>
+                    <div id="top-win-list" class="divide-y divide-white/5"></div>
+                </div>
+            </div>
+            
+            <div class="table-gradient rounded-xl card-border overflow-hidden shadow-2xl">
+                <div class="p-4 bg-white/5 border-b border-white/10">
+                    <h2 class="text-xs font-bold uppercase tracking-widest text-slate-400 uppercase italic">Global Player Registry</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead>
+                            <tr class="text-slate-500 text-[10px] uppercase border-b border-white/5 bg-black/40">
+                                <th class="p-4">Rank</th>
+                                <th class="p-4">Player</th>
+                                <th class="p-4 text-center">Played</th>
+                                <th class="p-4 text-center">W-D-L</th>
+                                <th class="p-4 text-center">GF</th>
+                                <th class="p-4 text-center text-white">Career Pts</th>
+                            </tr>
+                        </thead>
+                        <tbody id="standings-body-all"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </main>
 
     <script>
-        // ADMIN: ADD RESULTS HERE
-        const RESULTS_DATA = {
-            "Liverpool vs Real Madrid": "3-2",
-            "Chelsea vs Arsenal": "0-5",
-            "Barcelona vs Man Utd": "1-3",
-            "Man City vs Fiorentina": "5-4",
-            "AS Roma vs Atletico Madrid": "8-2",
-            "Newcastle vs Bayern Munich": "3-3",
-            "PSG vs Dortmund": "1-2"
+        const PLAYER_MAP_S2 = {
+            "Dortmund": "Hisham", "Chelsea": "Hidan", "Barcelona": "Sachu", "Liverpool": "Pramad",
+            "Man Utd": "Shamil", "Arsenal": "Peekiri", "Fiorentina": "Shahil", "Man City": "Saifu",
+            "AS Roma": "Abhijith", "Real Madrid": "Prajith", "PSG": "Arjun", "Atletico Madrid": "Muji",
+            "Newcastle": "Imad", "Bayern Munich": "Udayjith", "Sevilla": "Adhil"
         };
 
-        const CLUBS = [
-            "Real Madrid", "Liverpool", "Man City", "Arsenal", 
-            "Barcelona", "Man Utd", "Newcastle", "Chelsea", 
-            "Sevilla", "Fiorentina", "Atletico Madrid", "Bayern Munich", 
-            "AS Roma", "PSG", "Dortmund"
+        const RESULTS_S2 = {
+            "Liverpool vs Real Madrid": "3-2", "Chelsea vs Arsenal": "0-5", "Barcelona vs Man Utd": "1-3",
+            "Man City vs Fiorentina": "5-4", "AS Roma vs Atletico Madrid": "8-2", "Newcastle vs Bayern Munich": "3-3", "PSG vs Dortmund": "1-2"
+        };
+
+        const DATA_S1 = [
+            { name: "Hisham", mp: 9, w: 8, l: 0, d: 1, gf: 27, ga: 11, pts: 25 },
+            { name: "Imad", mp: 9, w: 6, l: 2, d: 1, gf: 31, ga: 21, pts: 19 },
+            { name: "Saifu", mp: 9, w: 5, l: 2, d: 2, gf: 25, ga: 13, pts: 17 },
+            { name: "Adhil", mp: 9, w: 5, l: 3, d: 1, gf: 30, ga: 18, pts: 16 },
+            { name: "Udayjith", mp: 9, w: 4, l: 4, d: 1, gf: 23, ga: 24, pts: 13 },
+            { name: "Abhijith", mp: 9, w: 3, l: 3, d: 3, gf: 16, ga: 16, pts: 12 },
+            { name: "Hidan", mp: 9, w: 3, l: 3, d: 3, gf: 16, ga: 19, pts: 12 },
+            { name: "Sachu", mp: 9, w: 3, l: 5, d: 1, gf: 17, ga: 21, pts: 10 },
+            { name: "Pramad", mp: 9, w: 1, l: 6, d: 2, gf: 9, ga: 22, pts: 5 }
         ];
 
-        const SCHEDULE = {
-            1: [
-                ["Liverpool", "Real Madrid"], ["Chelsea", "Arsenal"], ["Barcelona", "Man Utd"],
-                ["Man City", "Fiorentina"], ["AS Roma", "Atletico Madrid"], ["Newcastle", "Bayern Munich"], ["PSG", "Dortmund"]
-            ],
-            2: [
-                ["Man City", "Newcastle"], ["Real Madrid", "Chelsea"], ["Liverpool", "Barcelona"],
-                ["Dortmund", "Atletico Madrid"], ["AS Roma", "Bayern Munich"], ["Fiorentina", "Sevilla"], 
-                ["Arsenal", "PSG"], ["Sevilla", "Man Utd"]
-            ]
-        };
-
-        function generateRemainingDays() {
-            let teams = [...CLUBS];
-            if (teams.length % 2 !== 0) teams.push("BYE");
-            
-            for (let d = 3; d <= 15; d++) {
-                SCHEDULE[d] = [];
-                teams.splice(1, 0, teams.pop());
-                for (let i = 0; i < teams.length / 2; i++) {
-                    const h = teams[i];
-                    const a = teams[teams.length - 1 - i];
-                    if (h !== "BYE" && a !== "BYE") {
-                        const played = Object.keys(SCHEDULE).some(dk => {
-                            if (parseInt(dk) >= d) return false;
-                            return SCHEDULE[dk].some(p => (p[0] === h && p[1] === a) || (p[0] === a && p[1] === h));
-                        });
-                        if (!played) SCHEDULE[d].push([h, a]);
-                    }
-                }
-            }
-        }
-
-        let filterTeam = null;
-
-        function calculatePoints() {
+        function getS2Table() {
             const table = {};
-            CLUBS.forEach(c => table[c] = { name: c, p:0, w:0, d:0, l:0, gf:0, ga:0, pts:0 });
+            Object.keys(PLAYER_MAP_S2).forEach(c => table[c] = { name: c, p:0, w:0, l:0, d:0, gf:0, ga:0, pts:0, playerName: PLAYER_MAP_S2[c] });
+            const s2Matches = [["Liverpool", "Real Madrid"], ["Chelsea", "Arsenal"], ["Barcelona", "Man Utd"], ["Man City", "Fiorentina"], ["AS Roma", "Atletico Madrid"], ["Newcastle", "Bayern Munich"], ["PSG", "Dortmund"]];
+            s2Matches.forEach(pair => {
+                const score = RESULTS_S2[`${pair[0]} vs ${pair[1]}`];
+                if(score) {
+                    const s = score.split('-').map(Number);
+                    const h = table[pair[0]], a = table[pair[1]];
+                    h.p++; a.p++; h.gf += s[0]; h.ga += s[1]; a.gf += s[1]; a.ga += s[0];
+                    if (s[0] > s[1]) { h.pts += 3; h.w++; a.l++; } else if (s[1] > s[0]) { a.pts += 3; a.w++; h.l++; } else { h.pts++; a.pts++; h.d++; a.d++; }
+                }
+            });
+            return Object.values(table).sort((a,b) => b.pts - a.pts || (b.gf-b.ga) - (a.gf-a.ga));
+        }
+
+        function refreshS2() {
+            const standings = getS2Table();
             
-            Object.keys(SCHEDULE).forEach(day => {
-                SCHEDULE[day].forEach(pair => {
-                    const home = pair[0];
-                    const away = pair[1];
-                    const score = RESULTS_DATA[`${home} vs ${away}`] || RESULTS_DATA[`${away} vs ${home}`];
-                    
-                    if (score) {
-                        const s = score.split('-').map(Number);
-                        const isOriginalOrder = !!RESULTS_DATA[`${home} vs ${away}`];
-                        const hScore = isOriginalOrder ? s[0] : s[1];
-                        const aScore = isOriginalOrder ? s[1] : s[0];
+            // S2 Stat Cards
+            const topOff = [...standings].sort((a,b) => b.gf - a.gf)[0];
+            const topDef = [...standings].filter(x=>x.p>0).sort((a,b) => a.ga - b.ga)[0];
+            const topWins = [...standings].sort((a,b) => b.w - a.w)[0];
+            const topGD = [...standings].sort((a,b) => (b.gf-b.ga) - (a.gf-a.ga))[0];
 
-                        const h = table[home];
-                        const a = table[away];
-                        h.p++; a.p++; h.gf += hScore; h.ga += aScore; a.gf += aScore; a.ga += hScore;
-                        if (hScore > aScore) { h.w++; a.l++; h.pts += 3; }
-                        else if (aScore > hScore) { a.w++; h.l++; a.pts += 3; }
-                        else { h.d++; a.d++; h.pts += 1; a.pts += 1; }
-                    }
-                });
-            });
-            return Object.values(table).sort((a,b) => b.pts - a.pts || (b.gf-b.ga) - (a.gf-a.ga) || b.gf - a.gf);
-        }
+            document.getElementById('s2-stat-offense').innerText = topOff.playerName;
+            document.getElementById('s2-stat-offense-val').innerText = `${topOff.gf} Goals (${topOff.name})`;
+            document.getElementById('s2-stat-defense').innerText = topDef?.playerName || "-";
+            document.getElementById('s2-stat-defense-val').innerText = `${topDef?.ga || 0} Conceded (${topDef?.name || ''})`;
+            document.getElementById('s2-stat-wins').innerText = topWins.playerName;
+            document.getElementById('s2-stat-wins-val').innerText = `${topWins.w} Victories`;
+            document.getElementById('s2-stat-gd').innerText = topGD.playerName;
+            document.getElementById('s2-stat-gd-val').innerText = `${topGD.gf-topGD.ga} GD`;
 
-        function refreshUI() {
-            const standings = calculatePoints();
-            const tableBody = document.getElementById('standings-body');
-            tableBody.innerHTML = '';
-            standings.forEach((t, i) => {
-                const tr = document.createElement('tr');
-                tr.className = `border-b border-white/5 hover:bg-white/[0.04] cursor-pointer transition-all ${filterTeam === t.name ? 'active-row' : ''}`;
-                tr.onclick = () => setFilter(t.name);
-                tr.innerHTML = `
+            const body = document.getElementById('standings-body-s2');
+            body.innerHTML = standings.map((t, i) => `
+                <tr class="border-b border-white/5">
                     <td class="p-4 text-slate-500 font-bold">${i+1}</td>
-                    <td class="p-4 font-bold text-white">${t.name}</td>
-                    <td class="p-4 text-center text-slate-300">${t.p}</td>
-                    <td class="p-4 text-center text-slate-400">${t.gf}</td>
-                    <td class="p-4 text-center text-slate-400">${t.ga}</td>
-                    <td class="p-4 text-center ${t.gf-t.ga >= 0 ? 'text-emerald-400' : 'text-rose-500'} font-medium">${t.gf-t.ga}</td>
-                    <td class="p-4 text-center font-bold text-sky-400">${t.pts}</td>
-                `;
-                tableBody.appendChild(tr);
-            });
+                    <td class="p-4 font-bold text-white">${t.name}<br><span class="text-[9px] text-sky-400 uppercase">${t.playerName}</span></td>
+                    <td class="p-4 text-center">${t.p}</td>
+                    <td class="p-4 text-center ${t.gf-t.ga>=0?'text-emerald-500':'text-rose-500'} font-medium">${t.gf-t.ga}</td>
+                    <td class="p-4 text-center font-black text-sky-400">${t.pts}</td>
+                </tr>
+            `).join('');
 
-            const dayView = document.getElementById('day-select').value;
-            const container = document.getElementById('match-container');
-            container.innerHTML = '';
-
-            let list = [];
-            if (filterTeam) {
-                Object.keys(SCHEDULE).forEach(day => {
-                    SCHEDULE[day].forEach(pair => {
-                        if (pair[0] === filterTeam || pair[1] === filterTeam) {
-                            list.push({ day, home: pair[0], away: pair[1] });
-                        }
-                    });
-                });
-            } else {
-                SCHEDULE[dayView]?.forEach(pair => list.push({ day: dayView, home: pair[0], away: pair[1] }));
-            }
-
-            list.forEach(m => {
-                const scoreStr = RESULTS_DATA[`${m.home} vs ${m.away}`] || (RESULTS_DATA[`${m.away} vs ${m.home}`] ? RESULTS_DATA[`${m.away} vs ${m.home}`].split('-').reverse().join('-') : null);
-                const played = !!scoreStr;
-                const card = document.createElement('div');
-                card.className = `p-4 rounded-lg border transition-all ${played ? 'bg-white/[0.05] border-sky-500/20' : 'bg-transparent border-white/5 opacity-50'}`;
-                const scoreUI = played ? `<div class="bg-sky-500 text-black px-3 py-1 rounded text-xs font-black">${scoreStr}</div>` : `<div class="text-[8px] font-bold text-slate-500 uppercase tracking-widest bg-white/5 px-2 py-1 rounded">Day ${m.day}</div>`;
-                card.innerHTML = `<div class="flex justify-between items-center"><div class="w-[40%] font-bold text-xs truncate ${filterTeam === m.home ? 'text-sky-400 underline' : ''}">${m.home}</div><div class="w-[20%] flex justify-center">${scoreUI}</div><div class="w-[40%] font-bold text-xs truncate text-right ${filterTeam === m.away ? 'text-sky-400 underline' : ''}">${m.away}</div></div>`;
-                container.appendChild(card);
-            });
+            const day = document.getElementById('day-select').value;
+            const container = document.getElementById('match-container-s2');
+            const matches = day == 1 ? [["Liverpool", "Real Madrid"], ["Chelsea", "Arsenal"], ["Barcelona", "Man Utd"], ["Man City", "Fiorentina"], ["AS Roma", "Atletico Madrid"], ["Newcastle", "Bayern Munich"], ["PSG", "Dortmund"]] : [];
+            container.innerHTML = matches.map(m => {
+                const s = RESULTS_S2[`${m[0]} vs ${m[1]}`];
+                return `<div class="p-4 rounded-lg border border-white/5 bg-white/5"><div class="flex justify-between items-center text-[11px] font-bold"><div class="w-[40%]">${m[0]}</div><div class="bg-sky-500 text-black px-3 py-1 rounded font-black">${s || 'VS'}</div><div class="w-[40%] text-right">${m[1]}</div></div></div>`;
+            }).join('');
         }
 
-        function setFilter(name) {
-            filterTeam = name;
-            document.getElementById('filter-badge').classList.remove('hidden');
-            document.getElementById('filtered-name').innerText = name.toUpperCase();
-            refreshUI();
+        function refreshS1() {
+            document.getElementById('standings-body-s1').innerHTML = DATA_S1.map((t, i) => `<tr class="border-b border-white/5"><td class="p-4 text-slate-500 font-bold">${i+1}</td><td class="p-4 font-bold text-white uppercase">${t.name}</td><td class="p-4 text-center text-slate-400">POINTS: ${t.pts}</td><td class="p-4 text-right italic text-slate-500 text-[10px] uppercase">Record: ${t.w}-${t.d}-${t.l}</td></tr>`).join('');
         }
 
-        function clearFilter() {
-            filterTeam = null;
-            document.getElementById('filter-badge').classList.add('hidden');
-            refreshUI();
+        function refreshAllTime() {
+            const all = {};
+            DATA_S1.forEach(p => { 
+                if(!all[p.name]) all[p.name] = { name: p.name, p:0, w:0, d:0, l:0, gf:0, ga:0, pts:0 };
+                const e = all[p.name]; e.p += p.mp; e.w += p.w; e.d += p.d; e.l += p.l; e.gf += p.gf; e.ga += p.ga; e.pts += p.pts;
+            });
+            Object.values(getS2Table()).forEach(p => {
+                if(!all[p.playerName]) all[p.playerName] = { name: p.playerName, p:0, w:0, d:0, l:0, gf:0, ga:0, pts:0 };
+                const e = all[p.playerName]; e.p += p.p; e.w += p.w; e.d += p.d; e.l += p.l; e.gf += p.gf; e.ga += p.ga; e.pts += p.pts;
+            });
+            const sorted = Object.values(all).sort((a,b) => b.pts - a.pts);
+
+            const buildLeaderboard = (data, sortFn, unit, color) => [...data].sort(sortFn).slice(0, 5).map((p,i) => `<div class="p-3 flex justify-between items-center bg-white/[0.01]"><div class="flex items-center gap-3"><span class="text-[10px] text-slate-600 font-bold">${i+1}</span><span class="text-xs font-bold text-white uppercase">${p.name}</span></div><span class="text-xs font-black ${color}">${unit(p)}</span></div>`).join('');
+            document.getElementById('top-scorers-list').innerHTML = buildLeaderboard(sorted, (a,b) => b.gf - a.gf, p => p.gf + " GL", 'text-emerald-400');
+            document.getElementById('top-defense-list').innerHTML = buildLeaderboard(sorted.filter(x=>x.p>0), (a,b) => (a.ga/a.p) - (b.ga/b.p), p => (p.ga/p.p).toFixed(1) + " AVG", 'text-rose-400');
+            document.getElementById('top-win-list').innerHTML = buildLeaderboard(sorted.filter(x=>x.p>0), (a,b) => (b.w/b.p) - (a.w/a.p), p => Math.round((p.w/p.p)*100) + "%", 'text-amber-400');
+
+            document.getElementById('standings-body-all').innerHTML = sorted.map((t, i) => `
+                <tr class="border-b border-white/5">
+                    <td class="p-4 text-slate-500 font-bold">${i+1}</td>
+                    <td class="p-4 font-bold text-white uppercase">${t.name}</td>
+                    <td class="p-4 text-center">${t.p}</td>
+                    <td class="p-4 text-center text-slate-400 text-xs">${t.w}-${t.d}-${t.l}</td>
+                    <td class="p-4 text-center text-emerald-500">${t.gf}</td>
+                    <td class="p-4 text-center font-black text-sky-400">${t.pts}</td>
+                </tr>
+            `).join('');
+        }
+
+        function switchSeason(val) {
+            document.querySelectorAll('.season-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('season-1-view').classList.add('hidden');
+            document.getElementById('season-2-view').classList.add('hidden');
+            document.getElementById('all-time-view').classList.add('hidden');
+            if (val === 1) { document.getElementById('tab-s1').classList.add('active'); document.getElementById('season-1-view').classList.remove('hidden'); refreshS1(); } 
+            else if (val === 2) { document.getElementById('tab-s2').classList.add('active'); document.getElementById('season-2-view').classList.remove('hidden'); refreshS2(); } 
+            else { document.getElementById('tab-all').classList.add('active'); document.getElementById('all-time-view').classList.remove('hidden'); refreshAllTime(); }
         }
 
         const sel = document.getElementById('day-select');
         for(let i=1; i<=15; i++) {
             const op = document.createElement('option');
-            op.value = i; op.innerText = `Match Day ${i}`;
-            if(i===2) op.selected = true;
+            op.value = i; op.innerText = `Day ${i}`;
+            if(i===1) op.selected = true;
             sel.appendChild(op);
         }
-
-        generateRemainingDays();
-        refreshUI();
+        refreshS2();
     </script>
 </body>
 </html>
