@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eFootball 2026 | Director: Sinan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
+        body { font-family: 'Space Grotesk', sans-serif; background-color: #0a0a0c; color: #ffffff; }
+        .table-gradient { background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%); }
+        .active-row { background: rgba(14, 165, 233, 0.15) !important; border-left: 4px solid #0ea5e9; }
+        .card-border { border: 1px solid rgba(255,255,255,0.1); }
+        .manager-badge { background: linear-gradient(90deg, #0ea5e9 0%, #2563eb 100%); padding: 2px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; color: white; text-transform: uppercase; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <header class="max-w-7xl mx-auto mb-10 flex flex-col md:flex-row justify-between items-start md:items-end border-b border-white/10 pb-6 gap-4">
+        <div>
+            <div class="flex items-center gap-3 mb-1">
+                <h1 class="text-4xl font-bold tracking-tighter italic text-sky-500">eFOOTBALL 2026</h1>
+                <span class="manager-badge">FQ OFFICIAL LEAGUE</span>
+            </div>
+            <div class="flex flex-col gap-1">
+                <p class="text-slate-500 font-medium text-sm tracking-widest uppercase">League Director: <span class="text-white font-bold">Sinan</span></p>
+                <p class="text-sky-400/80 font-bold text-[11px] tracking-widest uppercase">Organized by FQ Organizing Committee</p>
+            </div>
+        </div>
+        <div id="filter-badge" class="hidden">
+            <div class="bg-sky-600/20 border border-sky-500/50 text-[10px] font-bold px-4 py-2 rounded flex items-center gap-3">
+                <span class="text-sky-400">ANALYZING:</span> <span id="filtered-name" class="text-white"></span>
+                <button onclick="clearFilter()" class="hover:text-red-400 ml-2">✕ RESET</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- STANDINGS -->
+        <div class="lg:col-span-7">
+            <div class="table-gradient rounded-xl card-border overflow-hidden shadow-2xl">
+                <div class="p-4 bg-white/5 border-b border-white/10">
+                    <h2 class="text-xs font-bold uppercase tracking-widest text-slate-400">Championship Standings</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead>
+                            <tr class="text-slate-500 text-[10px] uppercase border-b border-white/5 bg-black/40">
+                                <th class="p-4">Pos</th>
+                                <th class="p-4">Club</th>
+                                <th class="p-4 text-center">P</th>
+                                <th class="p-4 text-center">GF</th>
+                                <th class="p-4 text-center">GA</th>
+                                <th class="p-4 text-center">GD</th>
+                                <th class="p-4 text-center text-white">Pts</th>
+                            </tr>
+                        </thead>
+                        <tbody id="standings-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- FIXTURES -->
+        <div class="lg:col-span-5">
+            <div class="card-border rounded-xl flex flex-col h-[700px] bg-white/[0.02] shadow-2xl">
+                <div class="p-4 bg-white/5 border-b border-white/10 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xs font-bold uppercase tracking-widest text-slate-400">Match Schedule</h2>
+                        <p id="fixture-subtitle" class="text-[9px] text-slate-500 uppercase mt-0.5">FQ Tournament Path</p>
+                    </div>
+                    <select id="day-select" onchange="refreshUI()" class="bg-zinc-900 text-[10px] font-bold border border-white/10 rounded px-2 py-1 outline-none text-sky-500">
+                    </select>
+                </div>
+                <div id="match-container" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ADMIN: ADD RESULTS HERE
+        const RESULTS_DATA = {
+            "Liverpool vs Real Madrid": "3-2",
+            "Chelsea vs Arsenal": "0-5",
+            "Barcelona vs Man Utd": "1-3",
+            "Man City vs Fiorentina": "5-4",
+            "AS Roma vs Atletico Madrid": "8-2",
+            "Newcastle vs Bayern Munich": "3-3",
+            "PSG vs Dortmund": "1-2"
+        };
+
+        const CLUBS = [
+            "Real Madrid", "Liverpool", "Man City", "Arsenal", 
+            "Barcelona", "Man Utd", "Newcastle", "Chelsea", 
+            "Sevilla", "Fiorentina", "Atletico Madrid", "Bayern Munich", 
+            "AS Roma", "PSG", "Dortmund"
+        ];
+
+        const SCHEDULE = {
+            1: [
+                ["Liverpool", "Real Madrid"], ["Chelsea", "Arsenal"], ["Barcelona", "Man Utd"],
+                ["Man City", "Fiorentina"], ["AS Roma", "Atletico Madrid"], ["Newcastle", "Bayern Munich"], ["PSG", "Dortmund"]
+            ],
+            2: [
+                ["Man City", "Newcastle"], ["Real Madrid", "Chelsea"], ["Liverpool", "Barcelona"],
+                ["Dortmund", "Atletico Madrid"], ["AS Roma", "Bayern Munich"], ["Fiorentina", "Sevilla"], 
+                ["Arsenal", "PSG"], ["Sevilla", "Man Utd"]
+            ]
+        };
+
+        function generateRemainingDays() {
+            let teams = [...CLUBS];
+            if (teams.length % 2 !== 0) teams.push("BYE");
+            
+            for (let d = 3; d <= 15; d++) {
+                SCHEDULE[d] = [];
+                teams.splice(1, 0, teams.pop());
+                for (let i = 0; i < teams.length / 2; i++) {
+                    const h = teams[i];
+                    const a = teams[teams.length - 1 - i];
+                    if (h !== "BYE" && a !== "BYE") {
+                        const played = Object.keys(SCHEDULE).some(dk => {
+                            if (parseInt(dk) >= d) return false;
+                            return SCHEDULE[dk].some(p => (p[0] === h && p[1] === a) || (p[0] === a && p[1] === h));
+                        });
+                        if (!played) SCHEDULE[d].push([h, a]);
+                    }
+                }
+            }
+        }
+
+        let filterTeam = null;
+
+        function calculatePoints() {
+            const table = {};
+            CLUBS.forEach(c => table[c] = { name: c, p:0, w:0, d:0, l:0, gf:0, ga:0, pts:0 });
+            
+            Object.keys(SCHEDULE).forEach(day => {
+                SCHEDULE[day].forEach(pair => {
+                    const home = pair[0];
+                    const away = pair[1];
+                    const score = RESULTS_DATA[`${home} vs ${away}`] || RESULTS_DATA[`${away} vs ${home}`];
+                    
+                    if (score) {
+                        const s = score.split('-').map(Number);
+                        const isOriginalOrder = !!RESULTS_DATA[`${home} vs ${away}`];
+                        const hScore = isOriginalOrder ? s[0] : s[1];
+                        const aScore = isOriginalOrder ? s[1] : s[0];
+
+                        const h = table[home];
+                        const a = table[away];
+                        h.p++; a.p++; h.gf += hScore; h.ga += aScore; a.gf += aScore; a.ga += hScore;
+                        if (hScore > aScore) { h.w++; a.l++; h.pts += 3; }
+                        else if (aScore > hScore) { a.w++; h.l++; a.pts += 3; }
+                        else { h.d++; a.d++; h.pts += 1; a.pts += 1; }
+                    }
+                });
+            });
+            return Object.values(table).sort((a,b) => b.pts - a.pts || (b.gf-b.ga) - (a.gf-a.ga) || b.gf - a.gf);
+        }
+
+        function refreshUI() {
+            const standings = calculatePoints();
+            const tableBody = document.getElementById('standings-body');
+            tableBody.innerHTML = '';
+            standings.forEach((t, i) => {
+                const tr = document.createElement('tr');
+                tr.className = `border-b border-white/5 hover:bg-white/[0.04] cursor-pointer transition-all ${filterTeam === t.name ? 'active-row' : ''}`;
+                tr.onclick = () => setFilter(t.name);
+                tr.innerHTML = `
+                    <td class="p-4 text-slate-500 font-bold">${i+1}</td>
+                    <td class="p-4 font-bold text-white">${t.name}</td>
+                    <td class="p-4 text-center text-slate-300">${t.p}</td>
+                    <td class="p-4 text-center text-slate-400">${t.gf}</td>
+                    <td class="p-4 text-center text-slate-400">${t.ga}</td>
+                    <td class="p-4 text-center ${t.gf-t.ga >= 0 ? 'text-emerald-400' : 'text-rose-500'} font-medium">${t.gf-t.ga}</td>
+                    <td class="p-4 text-center font-bold text-sky-400">${t.pts}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+
+            const dayView = document.getElementById('day-select').value;
+            const container = document.getElementById('match-container');
+            container.innerHTML = '';
+
+            let list = [];
+            if (filterTeam) {
+                Object.keys(SCHEDULE).forEach(day => {
+                    SCHEDULE[day].forEach(pair => {
+                        if (pair[0] === filterTeam || pair[1] === filterTeam) {
+                            list.push({ day, home: pair[0], away: pair[1] });
+                        }
+                    });
+                });
+            } else {
+                SCHEDULE[dayView]?.forEach(pair => list.push({ day: dayView, home: pair[0], away: pair[1] }));
+            }
+
+            list.forEach(m => {
+                const scoreStr = RESULTS_DATA[`${m.home} vs ${m.away}`] || (RESULTS_DATA[`${m.away} vs ${m.home}`] ? RESULTS_DATA[`${m.away} vs ${m.home}`].split('-').reverse().join('-') : null);
+                const played = !!scoreStr;
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-lg border transition-all ${played ? 'bg-white/[0.05] border-sky-500/20' : 'bg-transparent border-white/5 opacity-50'}`;
+                const scoreUI = played ? `<div class="bg-sky-500 text-black px-3 py-1 rounded text-xs font-black">${scoreStr}</div>` : `<div class="text-[8px] font-bold text-slate-500 uppercase tracking-widest bg-white/5 px-2 py-1 rounded">Day ${m.day}</div>`;
+                card.innerHTML = `<div class="flex justify-between items-center"><div class="w-[40%] font-bold text-xs truncate ${filterTeam === m.home ? 'text-sky-400 underline' : ''}">${m.home}</div><div class="w-[20%] flex justify-center">${scoreUI}</div><div class="w-[40%] font-bold text-xs truncate text-right ${filterTeam === m.away ? 'text-sky-400 underline' : ''}">${m.away}</div></div>`;
+                container.appendChild(card);
+            });
+        }
+
+        function setFilter(name) {
+            filterTeam = name;
+            document.getElementById('filter-badge').classList.remove('hidden');
+            document.getElementById('filtered-name').innerText = name.toUpperCase();
+            refreshUI();
+        }
+
+        function clearFilter() {
+            filterTeam = null;
+            document.getElementById('filter-badge').classList.add('hidden');
+            refreshUI();
+        }
+
+        const sel = document.getElementById('day-select');
+        for(let i=1; i<=15; i++) {
+            const op = document.createElement('option');
+            op.value = i; op.innerText = `Match Day ${i}`;
+            if(i===2) op.selected = true;
+            sel.appendChild(op);
+        }
+
+        generateRemainingDays();
+        refreshUI();
+    </script>
+</body>
+</html>
+
