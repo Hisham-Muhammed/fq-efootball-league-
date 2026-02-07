@@ -3,109 +3,340 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>eFootball 2026 | Director: Sinan</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Tournament Stats Manager</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
-        body { font-family: 'Space Grotesk', sans-serif; background-color: #0a0a0c; color: #ffffff; overflow-x: hidden; }
-        .table-gradient { background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%); }
-        .card-border { border: 1px solid rgba(255,255,255,0.1); }
-        .manager-badge { background: linear-gradient(90deg, #0ea5e9 0%, #2563eb 100%); padding: 2px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; color: white; text-transform: uppercase; }
-        .season-tab { cursor: pointer; padding: 12px 15px; transition: all 0.3s; border-bottom: 2px solid transparent; color: #64748b; font-weight: bold; text-transform: uppercase; font-size: 11px; flex: 1; text-align: center; }
-        .season-tab.active { border-color: #0ea5e9; color: #0ea5e9; background: rgba(14, 165, 233, 0.05); }
-        .live-stat-card { background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        :root {
+            --primary: #1e3a8a; --secondary: #3b82f6; --accent: #10b981; --danger: #ef4444; --bg: #f1f5f9;
+        }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #1e293b; font-size: 14px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        
+        /* Header & Tabs */
+        .match-setup { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 15px; margin-bottom: 20px; background: #fff; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; }
+        .team-cfg input { padding: 8px; font-weight: 800; border: 2px solid #cbd5e1; border-radius: 6px; text-align: center; text-transform: uppercase; width: 100%; box-sizing: border-box; }
+        .vs-badge { background: var(--primary); color: white; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 900; }
+        
+        .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .tab { padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; background: #f8fafc; cursor: pointer; font-weight: 700; text-align: center; }
+        .tab.active { border-color: var(--secondary); background: #eff6ff; color: var(--primary); }
+
+        /* Form Layout */
+        .section-title { font-weight: 800; font-size: 0.75rem; color: #64748b; text-transform: uppercase; margin: 15px 0 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; }
+        .grid-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 12px; }
+        .input-box { display: flex; flex-direction: column; gap: 4px; }
+        label { font-size: 0.7rem; font-weight: 700; color: #475569; }
+        select, input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+
+        /* Boosters */
+        .booster-zone { background: #fffbeb; border: 1px solid #fde68a; padding: 12px; border-radius: 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+        .check-item { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; cursor: pointer; font-weight: 600; }
+
+        /* Result Area */
+        .pts-panel { background: var(--primary); color: white; padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin: 20px 0; }
+        .pts-val { font-size: 2.5rem; font-weight: 900; color: #60a5fa; }
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .btn { padding: 16px; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 1rem; }
+        .btn-save { background: var(--accent); color: white; }
+        .btn-dl { background: #334155; color: white; }
+
+        /* Logs */
+        .log-item { background: #fff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .tag { font-size: 0.6rem; padding: 2px 5px; background: #dbeafe; border-radius: 4px; margin-left: 3px; font-weight: 800; }
     </style>
 </head>
-<body class="p-2 md:p-8">
+<body>
 
-    <header class="max-w-7xl mx-auto mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-end border-b border-white/10 pb-6 gap-6">
-        <div>
-            <div class="flex items-center gap-3 mb-1">
-                <h1 class="text-4xl font-bold tracking-tighter italic text-sky-500 uppercase">FQ eFootball</h1>
-                <span class="manager-badge">Official League</span>
-            </div>
-            <div class="flex flex-col gap-1">
-                <p class="text-slate-500 font-medium text-sm tracking-widest uppercase">League Director: <span class="text-white font-bold">Sinan</span></p>
-                <p class="text-sky-400/80 font-bold text-[11px] tracking-widest uppercase text-xs">Organized by FQ Organizing Committee</p>
-            </div>
-        </div>
-        <div class="flex bg-white/5 rounded-t-lg overflow-hidden w-full lg:w-auto">
-            <div id="tab-s2" onclick="switchSeason(2)" class="season-tab active">Season 2 (Live)</div>
-            <div id="tab-s1" onclick="switchSeason(1)" class="season-tab">Season 1</div>
-            <div id="tab-all" onclick="switchSeason('all')" class="season-tab">All-Time Stats</div>
-        </div>
-    </header>
+<div class="container">
+    <div class="match-setup">
+        <div class="team-cfg"><label>Team 1 Code</label><input type="text" id="t1_code" value="IND" oninput="updFN()"></div>
+        <div class="vs-badge">VS</div>
+        <div class="team-cfg"><label>Team 2 Code</label><input type="text" id="t2_code" value="PAK" oninput="updFN()"></div>
+    </div>
 
-    <main class="max-w-7xl mx-auto pb-20">
-        <!-- SEASON 2 VIEW -->
-        <div id="season-2-view" class="space-y-6">
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="live-stat-card">
-                    <p class="text-[9px] uppercase text-sky-500 font-bold tracking-widest mb-1">Top Offense (S2)</p>
-                    <h4 id="s2-stat-offense" class="text-sm font-bold text-white truncate">-</h4>
-                    <p id="s2-stat-offense-val" class="text-[10px] text-slate-500">0 Goals</p>
-                </div>
-                <div class="live-stat-card">
-                    <p class="text-[9px] uppercase text-rose-500 font-bold tracking-widest mb-1">Best Defense (S2)</p>
-                    <h4 id="s2-stat-defense" class="text-sm font-bold text-white truncate">-</h4>
-                    <p id="s2-stat-defense-val" class="text-[10px] text-slate-500">0 Conceded</p>
-                </div>
-                <div class="live-stat-card">
-                    <p class="text-[9px] uppercase text-emerald-500 font-bold tracking-widest mb-1">Most Wins (S2)</p>
-                    <h4 id="s2-stat-wins" class="text-sm font-bold text-white truncate">-</h4>
-                    <p id="s2-stat-wins-val" class="text-[10px] text-slate-500">0 Wins</p>
-                </div>
-                <div class="live-stat-card">
-                    <p class="text-[9px] uppercase text-amber-500 font-bold tracking-widest mb-1">Goal Difference</p>
-                    <h4 id="s2-stat-gd" class="text-sm font-bold text-white truncate">-</h4>
-                    <p id="s2-stat-gd-val" class="text-[10px] text-slate-500">0 GD</p>
-                </div>
-            </div>
+    <div class="tabs">
+        <div class="tab active" id="tab1" onclick="setTeam(1)">TEAM 1 PLAYERS</div>
+        <div class="tab" id="tab2" onclick="setTeam(2)">TEAM 2 PLAYERS</div>
+    </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <div class="lg:col-span-8">
-                    <div class="table-gradient rounded-xl card-border overflow-hidden shadow-2xl">
-                        <div class="p-4 bg-white/5 border-b border-white/10 flex justify-between items-center">
-                            <h2 class="text-xs font-bold uppercase tracking-widest text-slate-400 font-black italic">Live Standings</h2>
-                            <span class="text-[10px] font-bold text-sky-400 animate-pulse">● LIVE UPDATE</span>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-[11px]">
-                                <thead>
-                                    <tr class="text-slate-500 text-[10px] uppercase border-b border-white/5 bg-black/40">
-                                        <th class="p-3">#</th>
-                                        <th class="p-3">Manager</th>
-                                        <th class="p-3 text-center">P</th>
-                                        <th class="p-3 text-center">W</th>
-                                        <th class="p-3 text-center">D</th>
-                                        <th class="p-3 text-center">L</th>
-                                        <th class="p-3 text-center text-sky-400">GF</th>
-                                        <th class="p-3 text-center text-rose-400">GA</th>
-                                        <th class="p-3 text-center">GD</th>
-                                        <th class="p-3 text-center text-white font-bold">Pts</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="standings-body-s2"></tbody>
-                            </table>
-                        </div>
-                    </div>
+    <div class="grid-row">
+        <div class="input-box"><label>Country</label><select id="country" onchange="loadP()"><option value="">-- Select --</option></select></div>
+        <div class="input-box"><label>Player</label><select id="player" onchange="calc()"></select></div>
+        <div class="input-box"><label>Role</label><select id="role" onchange="calc()"><option value="bat">Batsman/AR/WK</option><option value="bowl">Pure Bowler</option></select></div>
+    </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-                        <div class="space-y-4">
-                            <h3 class="text-[10px] font-bold uppercase tracking-widest text-sky-500">Attack Efficiency</h3>
-                            <div id="s2-attack-stats" class="space-y-2"></div>
-                        </div>
-                        <div class="space-y-4">
-                            <h3 class="text-[10px] font-bold uppercase tracking-widest text-rose-500">Defensive Rating</h3>
-                            <div id="s2-defense-stats" class="space-y-2"></div>
-                        </div>
-                        <div class="space-y-4">
-                            <h3 class="text-[10px] font-bold uppercase tracking-widest text-emerald-500">Win Rate %</h3>
-                            <div id="s2-winrate-stats" class="space-y-2"></div>
-                        </div>
-                    </div>
+    <div class="section-title">Tournament Boosters 🚀</div>
+    <div class="booster-zone">
+        <label class="check-item"><input type="checkbox" id="b_2x"> 2x Score</label>
+        <label class="check-item"><input type="checkbox" id="b_mega"> Megalomaniac</label>
+        <label class="check-item"><input type="checkbox" id="b_vacc"> Vaccinate</label>
+        <label class="check-item" style="color:var(--danger)"><input type="checkbox" id="b_rev"> REVERSE</label>
+        <label class="check-item"><input type="checkbox" id="b_comp"> Companion</label>
+        <label class="check-item"><input type="checkbox" id="b_shad"> Shadow</label>
+    </div>
+
+    <div class="section-title">Batting Stats</div>
+    <div class="grid-row">
+        <div class="input-box"><label>Runs</label><input type="number" id="runs" value="0"></div>
+        <div class="input-box"><label>Balls</label><input type="number" id="balls" value="0"></div>
+        <div class="input-box"><label>Fours</label><input type="number" id="fours" value="0"></div>
+        <div class="input-box"><label>Sixes</label><input type="number" id="sixes" value="0"></div>
+        <label class="check-item"><input type="checkbox" id="isOut"> Got Out</label>
+        <label class="check-item"><input type="checkbox" id="duckEx"> Last Over Duck</label>
+    </div>
+
+    <div class="section-title">Bowling Stats</div>
+    <div class="grid-row">
+        <div class="input-box"><label>Wkts (C/S)</label><input type="number" id="wk_cs" value="0"></div>
+        <div class="input-box"><label>Wkts (B/LBW)</label><input type="number" id="wk_lb" value="0"></div>
+        <div class="input-box"><label>Overs</label><input type="number" id="overs" step="0.1" value="0"></div>
+        <div class="input-box"><label>Runs Conc.</label><input type="number" id="rc" value="0"></div>
+        <div class="input-box"><label>Dots</label><input type="number" id="dots" value="0"></div>
+        <div class="input-box"><label>Maidens</label><input type="number" id="maidens" value="0"></div>
+    </div>
+    <div class="grid-row">
+        <label class="check-item"><input type="checkbox" id="hattrick"> Hattrick</label>
+        <label class="check-item"><input type="checkbox" id="t2t"> 2 in 2 Balls</label>
+    </div>
+
+    <div class="section-title">Fielding & Extras</div>
+    <div class="grid-row">
+        <div class="input-box"><label>Catches</label><input type="number" id="ct" value="0"></div>
+        <div class="input-box"><label>Stumpings</label><input type="number" id="st" value="0"></div>
+        <div class="input-box"><label>RunOut (Dir)</label><input type="number" id="ro_d" value="0"></div>
+        <div class="input-box"><label>RunOut (Inv)</label><input type="number" id="ro_i" value="0"></div>
+    </div>
+
+    <div class="section-title">Match Outcomes</div>
+    <div class="booster-zone" style="background:#f8fafc; border-color:#e2e8f0;">
+        <label class="check-item"><input type="checkbox" id="xi" checked> Playing XI</label>
+        <label class="check-item"><input type="checkbox" id="win"> Won Match</label>
+        <label class="check-item"><input type="checkbox" id="lost"> Lost Match</label>
+        <label class="check-item"><input type="checkbox" id="mom"> MOM</label>
+        <label class="check-item"><input type="checkbox" id="ocap"> Orange Cap</label>
+        <label class="check-item"><input type="checkbox" id="pcap"> Purple Cap</label>
+        <label class="check-item"><input type="checkbox" id="m6"> Most 6s</label>
+        <label class="check-item"><input type="checkbox" id="m4"> Most 4s</label>
+        <label class="check-item"><input type="checkbox" id="emerg"> Emerging</label>
+        <label class="check-item"><input type="checkbox" id="pot"> Player of Tourney</label>
+    </div>
+
+    <div class="pts-panel">
+        <div><strong id="p_disp">...</strong>'s Final Points</div>
+        <div class="pts-val" id="total_pts">0</div>
+    </div>
+
+    <div class="btn-row">
+        <button class="btn btn-save" onclick="save()">SAVE PLAYER</button>
+        <button class="btn btn-dl" onclick="download()">DOWNLOAD <span id="fn_txt">INDvsPAK.json</span></button>
+    </div>
+
+    <div class="section-title">Saved Match Data (<span id="count">0</span>)</div>
+    <div id="log"></div>
+</div>
+
+<script>
+const players = {
+    "India": ["Suryakumar Yadav", "Ishan Kishan", "Hardik Pandya", "Axar Patel", "Tilak Varma", "Arshdeep Singh", "Varun Chakravarthy"],
+    "Sri Lanka": ["Kushal Perera", "Kushal Mendis", "Dunith Wellalage", "Matheesha Pathirana", "Dushmantha Chameera", "Kamil Mishara", "Wanindu Hasaranga", "Kamindu Mendis"],
+    "Pakistan": ["Shaheen Afridi", "Said Ayub", "Naseem Shah", "Muhammed Nawaz", "Faheem Ashraf", "Babar Azam", "Abrar Ahmed", "Fakhar Zaman", "Salman Agha", "Usman Khan", "Shahibzada Farhan"],
+    "Australia": ["Cooper Connolly", "Nathan Ellis", "Travis Head", "Marcus Stoinis", "Josh Inglis", "Mitchell Marsh", "Matthew Kunhemann", "Xavier Bartlett", "Josh Hazlewood", "Ben Dwarshuis", "Matt Renshaw"],
+    "New Zealand": ["Rachin Ravindra", "Daryl Mitchell", "Finn Allen", "Jacob Duffy", "Mark Chapman", "Glenn Phillips", "Kyle Jamieson", "Michael Bracewell"],
+    "South Africa": ["Tristan Stubbs", "Quinton de Kock", "Keshav Maharaj", "Dewald Brevis", "Marco Jansen", "George Linde", "David Miller", "Lungi Ngidi", "Corbin Bosch"],
+    "England": ["Jofra Archer", "Adil Rashid", "Will Jacks", "Luke Wood", "Harry Brook", "Jacob Bethell", "Jos Buttler", "Sam Curran"],
+    "Afghanistan": ["Mujeeb Ur Rehman", "Ibrahim Zadran", "Sediqullah Atal", "Darwish Rasooli", "Rashid Khan", "Azmatullah Omarzai", "Fazalhaq Farooqi"],
+    "West Indies": ["Jason Holder", "Gudakesh Motie", "Roston Chase", "Rovman Powell", "Shai Hope", "Brandon King", "Mathew Forde", "Johnson Charles", "Jayden Seales", "Shimron Hetmyer", "Romario Shepherd", "Akeal Hosein"],
+    "Others": ["Sikandar Raza", "JJ Smuts", "Aasif Sheikh", "Monank Patel", "Logan van Beek", "Scott Edwards", "Andre Gous"]
+};
+
+let activeTeam = 1;
+let savedData = [];
+let teamCountries = {1: "", 2: ""};
+
+function init() {
+    const cSel = document.getElementById('country');
+    Object.keys(players).forEach(c => cSel.innerHTML += `<option value="${c}">${c}</option>`);
+    updFN();
+}
+
+function setTeam(id) {
+    activeTeam = id;
+    document.getElementById('tab1').className = (id===1) ? 'tab active' : 'tab';
+    document.getElementById('tab2').className = (id===2) ? 'tab active' : 'tab';
+    document.getElementById('country').value = teamCountries[id];
+    loadP();
+}
+
+function loadP() {
+    const c = document.getElementById('country').value;
+    teamCountries[activeTeam] = c;
+    const pSel = document.getElementById('player');
+    pSel.innerHTML = '<option value="">-- Select Player --</option>';
+    if(players[c]) players[c].forEach(p => pSel.innerHTML += `<option value="${p}">${p}</option>`);
+}
+
+function calc() {
+    const name = document.getElementById('player').value;
+    document.getElementById('p_disp').innerText = name || "...";
+    
+    let p = 0;
+    const runs = parseInt(document.getElementById('runs').value) || 0;
+    const balls = parseInt(document.getElementById('balls').value) || 0;
+    const fours = parseInt(document.getElementById('fours').value) || 0;
+    const sixes = parseInt(document.getElementById('sixes').value) || 0;
+    const out = document.getElementById('isOut').checked;
+    const role = document.getElementById('role').value;
+
+    // --- Batting ---
+    p += (runs * 1) + (fours * 1) + (sixes * 3);
+    
+    // Duck Logic
+    if(runs === 0 && out && role !== 'bowl' && !document.getElementById('duckEx').checked) {
+        p -= 10;
+    }
+
+    // Milestones
+    if(runs >= 150) p += 40;
+    else if(runs >= 125) p += 25;
+    else if(runs >= 100) p += 20;
+    else if(runs >= 75) p += 15;
+    else if(runs >= 50) p += 10;
+    else if(runs >= 30) p += 5;
+
+    // Unbeaten
+    if(!out && balls >= 30) p += 10;
+
+    // Strike Rate
+    if((balls >= 10 || runs >= 20) && role !== 'bowl') {
+        const sr = (runs / balls) * 100;
+        if(sr <= 50) p -= 30;
+        else if(sr <= 75) p -= 20;
+        else if(sr <= 100) p -= 10;
+        else if(sr > 200) p += 20 + (Math.floor((sr - 200) / 25) * 5);
+        else if(sr > 175) p += 20;
+        else if(sr > 150) p += 15;
+        else if(sr > 135) p += 10;
+        else if(sr > 120) p += 5;
+    }
+
+    // --- Bowling ---
+    const w_cs = parseInt(document.getElementById('wk_cs').value) || 0;
+    const w_lb = parseInt(document.getElementById('wk_lb').value) || 0;
+    const tw = w_cs + w_lb;
+    p += (w_cs * 25) + (w_lb * (25 + 8)); // 25 for wkt + 8 for lbw/bowled
+    p += (parseInt(document.getElementById('dots').value) || 0) * 1;
+    p += (parseInt(document.getElementById('maidens').value) || 0) * 25;
+
+    // Wkt Milestones
+    if(tw >= 7) p += 50;
+    else if(tw >= 6) p += 40;
+    else if(tw >= 5) p += 30;
+    else if(tw >= 4) p += 20;
+    else if(tw >= 3) p += 10;
+
+    if(document.getElementById('hattrick').checked) p += 100;
+    if(document.getElementById('t2t').checked) p += 25;
+
+    // Economy
+    const overs = parseFloat(document.getElementById('overs').value) || 0;
+    const rc = parseInt(document.getElementById('rc').value) || 0;
+    if(overs >= 2) {
+        const eco = rc / overs;
+        if(eco <= 1.0) p += 70;
+        else if(eco <= 2.0) p += 60;
+        else if(eco <= 3.0) p += 50;
+        else if(eco <= 4.0) p += 40;
+        else if(eco <= 5.0) p += 30;
+        else if(eco <= 6.0) p += 20;
+        else if(eco <= 7.0) p += 10;
+        else if(eco > 14.0) p -= 20;
+        else if(eco > 12.0) p -= 15;
+        else if(eco > 11.0) p -= 10;
+        else if(eco > 10.0) p -= 5;
+    }
+
+    // --- Fielding ---
+    const c = parseInt(document.getElementById('ct').value) || 0;
+    const s = parseInt(document.getElementById('st').value) || 0;
+    const rd = parseInt(document.getElementById('ro_d').value) || 0;
+    const ri = parseInt(document.getElementById('ro_i').value) || 0;
+    p += (c * 10) + (s * 15) + (rd * 25) + (ri * 10);
+    if((c+s+rd+ri) >= 3) p += 30;
+
+    // --- Extras ---
+    if(document.getElementById('xi').checked) p += 5;
+    if(document.getElementById('win').checked) p += 10;
+    if(document.getElementById('lost').checked) p -= 5;
+    if(document.getElementById('mom').checked) p += 50;
+    if(document.getElementById('ocap').checked) p += 150;
+    if(document.getElementById('pcap').checked) p += 150;
+    if(document.getElementById('emerg').checked) p += 75;
+    if(document.getElementById('m6').checked) p += 100;
+    if(document.getElementById('m4').checked) p += 100;
+    if(document.getElementById('pot').checked) p += 200;
+
+    // --- Boosters ---
+    if(document.getElementById('b_mega').checked) {
+        p += (parseInt(document.getElementById('dots').value) || 0) * 10;
+        p += (fours + sixes) * 10;
+    }
+    if(document.getElementById('b_2x').checked) p *= 2;
+    if(document.getElementById('b_vacc').checked && p < 0) p = 0;
+    if(document.getElementById('b_rev').checked) p = 0;
+
+    document.getElementById('total_pts').innerText = p;
+    return p;
+}
+
+function save() {
+    const name = document.getElementById('player').value;
+    if(!name) return;
+    const points = calc();
+    const teamCode = document.getElementById(`t${activeTeam}_code`).value;
+    
+    const bsts = [];
+    if(document.getElementById('b_2x').checked) bsts.push('2x');
+    if(document.getElementById('b_mega').checked) bsts.push('Mega');
+    if(document.getElementById('b_vacc').checked) bsts.push('Vacc');
+    if(document.getElementById('b_rev').checked) bsts.push('REV');
+    if(document.getElementById('b_comp').checked) bsts.push('Comp');
+    if(document.getElementById('b_shad').checked) bsts.push('Shad');
+
+    savedData.push({ name, team: teamCode, points, boosters: bsts });
+
+    const log = document.getElementById('log');
+    const div = document.createElement('div');
+    div.className = 'log-item';
+    div.innerHTML = `<div><strong>${name}</strong> (${teamCode})${bsts.map(b=>`<span class="tag">${b}</span>`).join('')}</div> <strong>${points}</strong>`;
+    log.prepend(div);
+    
+    document.getElementById('count').innerText = savedData.length;
+    document.querySelectorAll('input[type="number"]').forEach(i => i.value = 0);
+    document.querySelectorAll('.container input[type="checkbox"]').forEach(i => i.checked = false);
+    document.getElementById('xi').checked = true;
+    calc();
+}
+
+function updFN() {
+    const t1 = document.getElementById('t1_code').value.toUpperCase() || 'T1';
+    const t2 = document.getElementById('t2_code').value.toUpperCase() || 'T2';
+    document.getElementById('fn_txt').innerText = `${t1}vs${t2}.json`;
+}
+
+function download() {
+    if(!savedData.length) return;
+    const blob = new Blob([JSON.stringify(savedData, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = document.getElementById('fn_txt').innerText;
+    a.click();
+}
+
+document.querySelectorAll('input, select').forEach(el => el.oninput = calc);
+init();
+</script>
+</body>
+</html>
+
                 </div>
 
                 <div class="lg:col-span-4">
