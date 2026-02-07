@@ -54,8 +54,8 @@
     </div>
 
     <div class="tabs">
-        <div class="tab active" id="tab1" onclick="setTeam(1)">TEAM 1 PLAYERS</div>
-        <div class="tab" id="tab2" onclick="setTeam(2)">TEAM 2 PLAYERS</div>
+        <div class="tab active" id="tab1" onclick="setTeam(1)">TEAM 1</div>
+        <div class="tab" id="tab2" onclick="setTeam(2)">TEAM 2</div>
     </div>
 
     <div class="grid-row">
@@ -64,7 +64,7 @@
         <div class="input-box"><label>Role</label><select id="role" onchange="calc()"><option value="bat">Batsman/AR/WK</option><option value="bowl">Pure Bowler</option></select></div>
     </div>
 
-    <div class="section-title">Tournament Boosters 🚀</div>
+    <div class="section-title">Boosters 🚀</div>
     <div class="booster-zone">
         <label class="check-item"><input type="checkbox" id="b_2x"> 2x Score</label>
         <label class="check-item"><input type="checkbox" id="b_mega"> Megalomaniac</label>
@@ -74,7 +74,7 @@
         <label class="check-item"><input type="checkbox" id="b_shad"> Shadow</label>
     </div>
 
-    <div class="section-title">Batting Stats</div>
+    <div class="section-title">Batting</div>
     <div class="grid-row">
         <div class="input-box"><label>Runs</label><input type="number" id="runs" value="0"></div>
         <div class="input-box"><label>Balls</label><input type="number" id="balls" value="0"></div>
@@ -84,7 +84,7 @@
         <label class="check-item"><input type="checkbox" id="duckEx"> Last Over Duck</label>
     </div>
 
-    <div class="section-title">Bowling Stats</div>
+    <div class="section-title">Bowling</div>
     <div class="grid-row">
         <div class="input-box"><label>Wkts (C/S)</label><input type="number" id="wk_cs" value="0"></div>
         <div class="input-box"><label>Wkts (B/LBW)</label><input type="number" id="wk_lb" value="0"></div>
@@ -98,13 +98,218 @@
         <label class="check-item"><input type="checkbox" id="t2t"> 2 in 2 Balls</label>
     </div>
 
-    <div class="section-title">Fielding & Extras</div>
+    <div class="section-title">Fielding & Outcomes</div>
     <div class="grid-row">
         <div class="input-box"><label>Catches</label><input type="number" id="ct" value="0"></div>
         <div class="input-box"><label>Stumpings</label><input type="number" id="st" value="0"></div>
         <div class="input-box"><label>RunOut (Dir)</label><input type="number" id="ro_d" value="0"></div>
         <div class="input-box"><label>RunOut (Inv)</label><input type="number" id="ro_i" value="0"></div>
     </div>
+    <div class="booster-zone" style="background:#f8fafc; border-color:#e2e8f0;">
+        <label class="check-item"><input type="checkbox" id="xi" checked> Playing XI</label>
+        <label class="check-item"><input type="checkbox" id="win"> Won</label>
+        <label class="check-item"><input type="checkbox" id="lost"> Lost</label>
+        <label class="check-item"><input type="checkbox" id="mom"> MOM</label>
+        <label class="check-item"><input type="checkbox" id="ocap"> Orange Cap</label>
+        <label class="check-item"><input type="checkbox" id="pcap"> Purple Cap</label>
+    </div>
+
+    <div class="pts-panel">
+        <div><strong id="p_disp">...</strong>'s Final Points</div>
+        <div class="pts-val" id="total_pts">0</div>
+    </div>
+
+    <div class="btn-row">
+        <button class="btn btn-save" onclick="save()">SAVE PLAYER</button>
+        <button class="btn btn-dl" onclick="download()">DOWNLOAD FOR STATS <span id="fn_txt">INDvsPAK.json</span></button>
+    </div>
+
+    <div class="section-title">Saved Data (<span id="count">0</span>)</div>
+    <div id="log"></div>
+</div>
+
+<script>
+const players = {
+    "India": ["Suryakumar Yadav", "Ishan Kishan", "Hardik Pandya", "Axar Patel", "Tilak Varma", "Arshdeep Singh", "Varun Chakravarthy"],
+    "Sri Lanka": ["Kushal Perera", "Kushal Mendis", "Dunith Wellalage", "Matheesha Pathirana", "Dushmantha Chameera", "Kamil Mishara", "Wanindu Hasaranga", "Kamindu Mendis"],
+    "Pakistan": ["Shaheen Afridi", "Said Ayub", "Naseem Shah", "Muhammed Nawaz", "Faheem Ashraf", "Babar Azam", "Abrar Ahmed", "Fakhar Zaman", "Salman Agha", "Usman Khan", "Shahibzada Farhan"],
+    "Australia": ["Cooper Connolly", "Nathan Ellis", "Travis Head", "Marcus Stoinis", "Josh Inglis", "Mitchell Marsh", "Matthew Kunhemann", "Xavier Bartlett", "Josh Hazlewood", "Ben Dwarshuis", "Matt Renshaw"],
+    "Others": ["Sikandar Raza", "JJ Smuts", "Aasif Sheikh", "Monank Patel", "Logan van Beek", "Scott Edwards", "Andre Gous"]
+};
+
+let activeTeam = 1;
+let savedData = [];
+let teamCountries = {1: "", 2: ""};
+
+function init() {
+    const cSel = document.getElementById('country');
+    Object.keys(players).forEach(c => cSel.innerHTML += `<option value="${c}">${c}</option>`);
+    updFN();
+}
+
+function setTeam(id) {
+    activeTeam = id;
+    document.getElementById('tab1').className = (id===1) ? 'tab active' : 'tab';
+    document.getElementById('tab2').className = (id===2) ? 'tab active' : 'tab';
+    document.getElementById('country').value = teamCountries[id];
+    loadP();
+}
+
+function loadP() {
+    const c = document.getElementById('country').value;
+    teamCountries[activeTeam] = c;
+    const pSel = document.getElementById('player');
+    pSel.innerHTML = '<option value="">-- Select Player --</option>';
+    if(players[c]) players[c].forEach(p => pSel.innerHTML += `<option value="${p}">${p}</option>`);
+}
+
+function calc() {
+    const name = document.getElementById('player').value;
+    document.getElementById('p_disp').innerText = name || "...";
+    
+    let p = 0;
+    const runs = parseInt(document.getElementById('runs').value) || 0;
+    const balls = parseInt(document.getElementById('balls').value) || 0;
+    const fours = parseInt(document.getElementById('fours').value) || 0;
+    const sixes = parseInt(document.getElementById('sixes').value) || 0;
+    const out = document.getElementById('isOut').checked;
+    const role = document.getElementById('role').value;
+
+    // --- Batting Logic ---
+    p += (runs * 1) + (fours * 1) + (sixes * 3);
+    if(runs === 0 && out && role !== 'bowl' && !document.getElementById('duckEx').checked) p -= 10;
+    if(runs >= 150) p += 40; else if(runs >= 125) p += 25; else if(runs >= 100) p += 20;
+    else if(runs >= 75) p += 15; else if(runs >= 50) p += 10; else if(runs >= 30) p += 5;
+    if(!out && balls >= 30) p += 10;
+
+    if((balls >= 10 || runs >= 20) && role !== 'bowl') {
+        const sr = (runs / balls) * 100;
+        if(sr <= 50) p -= 30; else if(sr <= 75) p -= 20; else if(sr <= 100) p -= 10;
+        else if(sr > 200) p += 20 + (Math.floor((sr - 200) / 25) * 5);
+        else if(sr > 175) p += 20; else if(sr > 150) p += 15; else if(sr > 135) p += 10; else if(sr > 120) p += 5;
+    }
+
+    // --- Bowling Logic ---
+    const w_cs = parseInt(document.getElementById('wk_cs').value) || 0;
+    const w_lb = parseInt(document.getElementById('wk_lb').value) || 0;
+    const tw = w_cs + w_lb;
+    p += (w_cs * 25) + (w_lb * 33); // 25 + 8 for LBW/Bowled
+    p += (parseInt(document.getElementById('dots').value) || 0) * 1;
+    p += (parseInt(document.getElementById('maidens').value) || 0) * 25;
+
+    if(tw >= 7) p += 50; else if(tw >= 6) p += 40; else if(tw >= 5) p += 30;
+    else if(tw >= 4) p += 20; else if(tw >= 3) p += 10;
+
+    if(document.getElementById('hattrick').checked) p += 100;
+    if(document.getElementById('t2t').checked) p += 25;
+
+    const overs = parseFloat(document.getElementById('overs').value) || 0;
+    const rc = parseInt(document.getElementById('rc').value) || 0;
+    if(overs >= 2) {
+        const eco = rc / overs;
+        if(eco <= 1.0) p += 70; else if(eco <= 2.0) p += 60; else if(eco <= 3.0) p += 50;
+        else if(eco <= 4.0) p += 40; else if(eco <= 5.0) p += 30; else if(eco <= 6.0) p += 20;
+        else if(eco <= 7.0) p += 10; else if(eco > 14.0) p -= 20; else if(eco > 12.0) p -= 15;
+        else if(eco > 11.0) p -= 10; else if(eco > 10.0) p -= 5;
+    }
+
+    // --- Fielding ---
+    const c = parseInt(document.getElementById('ct').value) || 0;
+    const s = parseInt(document.getElementById('st').value) || 0;
+    const rd = parseInt(document.getElementById('ro_d').value) || 0;
+    const ri = parseInt(document.getElementById('ro_i').value) || 0;
+    p += (c * 10) + (s * 15) + (rd * 25) + (ri * 10);
+    if((c+s+rd+ri) >= 3) p += 30;
+
+    // --- Multipliers/Boosters ---
+    if(document.getElementById('b_mega').checked) {
+        p += (parseInt(document.getElementById('dots').value) || 0) * 10;
+        p += (fours + sixes) * 10;
+    }
+    if(document.getElementById('xi').checked) p += 5;
+    if(document.getElementById('win').checked) p += 10;
+    if(document.getElementById('lost').checked) p -= 5;
+    if(document.getElementById('mom').checked) p += 50;
+    if(document.getElementById('ocap').checked) p += 150;
+    if(document.getElementById('pcap').checked) p += 150;
+
+    if(document.getElementById('b_2x').checked) p *= 2;
+    if(document.getElementById('b_vacc').checked && p < 0) p = 0;
+    if(document.getElementById('b_rev').checked) p = 0;
+
+    document.getElementById('total_pts').innerText = p;
+    return p;
+}
+
+function save() {
+    const name = document.getElementById('player').value;
+    if(!name) return;
+    const points = calc();
+    const teamCode = document.getElementById(`t${activeTeam}_code`).value;
+    
+    // Key Stats for Graphing
+    const runs = parseInt(document.getElementById('runs').value) || 0;
+    const balls = parseInt(document.getElementById('balls').value) || 0;
+    const wkts = (parseInt(document.getElementById('wk_cs').value) || 0) + (parseInt(document.getElementById('wk_lb').value) || 0);
+    const overs = parseFloat(document.getElementById('overs').value) || 0;
+    const rc = parseInt(document.getElementById('rc').value) || 0;
+    
+    const boosters = [];
+    if(document.getElementById('b_2x').checked) boosters.push('2x');
+    if(document.getElementById('b_mega').checked) boosters.push('Mega');
+    if(document.getElementById('b_vacc').checked) boosters.push('Vacc');
+    if(document.getElementById('b_rev').checked) boosters.push('REV');
+
+    // Create JSON object with analytical fields
+    savedData.push({ 
+        name, 
+        team: teamCode, 
+        points, 
+        analytics: {
+            runs, 
+            balls, 
+            sr: balls > 0 ? ((runs/balls)*100).toFixed(1) : 0,
+            wkts, 
+            eco: overs > 0 ? (rc/overs).toFixed(1) : 0,
+            boundaries: (parseInt(document.getElementById('fours').value)||0) + (parseInt(document.getElementById('sixes').value)||0),
+            fielding: (parseInt(document.getElementById('ct').value)||0) + (parseInt(document.getElementById('st').value)||0) + (parseInt(document.getElementById('ro_d').value)||0) + (parseInt(document.getElementById('ro_i').value)||0)
+        },
+        boosters 
+    });
+
+    const log = document.getElementById('log');
+    const div = document.createElement('div');
+    div.className = 'log-item';
+    div.innerHTML = `<div><strong>${name}</strong> (${teamCode})</div> <strong>${points} pts</strong>`;
+    log.prepend(div);
+    
+    document.getElementById('count').innerText = savedData.length;
+    document.querySelectorAll('input[type="number"]').forEach(i => i.value = 0);
+    document.querySelectorAll('.container input[type="checkbox"]').forEach(i => i.checked = false);
+    document.getElementById('xi').checked = true;
+    calc();
+}
+
+function updFN() {
+    const t1 = document.getElementById('t1_code').value.toUpperCase() || 'T1';
+    const t2 = document.getElementById('t2_code').value.toUpperCase() || 'T2';
+    document.getElementById('fn_txt').innerText = `${t1}vs${t2}_STATS.json`;
+}
+
+function download() {
+    if(!savedData.length) return;
+    const blob = new Blob([JSON.stringify(savedData, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = document.getElementById('fn_txt').innerText;
+    a.click();
+}
+
+document.querySelectorAll('input, select').forEach(el => el.oninput = calc);
+init();
+</script>
+</body>
+</html>
 
     <div class="section-title">Match Outcomes</div>
     <div class="booster-zone" style="background:#f8fafc; border-color:#e2e8f0;">
