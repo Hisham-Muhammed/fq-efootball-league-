@@ -3,109 +3,420 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tournament Stats Manager</title>
+    <title>FQ eFootball | Director: Sinan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --primary: #1e3a8a; --secondary: #3b82f6; --accent: #10b981; --danger: #ef4444; --bg: #f1f5f9;
-        }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #1e293b; font-size: 14px; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
-        
-        /* Header & Tabs */
-        .match-setup { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 15px; margin-bottom: 20px; background: #fff; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; }
-        .team-cfg input { padding: 8px; font-weight: 800; border: 2px solid #cbd5e1; border-radius: 6px; text-align: center; text-transform: uppercase; width: 100%; box-sizing: border-box; }
-        .vs-badge { background: var(--primary); color: white; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 900; }
-        
-        .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .tab { padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; background: #f8fafc; cursor: pointer; font-weight: 700; text-align: center; }
-        .tab.active { border-color: var(--secondary); background: #eff6ff; color: var(--primary); }
-
-        /* Form Layout */
-        .section-title { font-weight: 800; font-size: 0.75rem; color: #64748b; text-transform: uppercase; margin: 15px 0 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; }
-        .grid-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 12px; }
-        .input-box { display: flex; flex-direction: column; gap: 4px; }
-        label { font-size: 0.7rem; font-weight: 700; color: #475569; }
-        select, input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
-
-        /* Boosters */
-        .booster-zone { background: #fffbeb; border: 1px solid #fde68a; padding: 12px; border-radius: 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-        .check-item { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; cursor: pointer; font-weight: 600; }
-
-        /* Result Area */
-        .pts-panel { background: var(--primary); color: white; padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin: 20px 0; }
-        .pts-val { font-size: 2.5rem; font-weight: 900; color: #60a5fa; }
-        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .btn { padding: 16px; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 1rem; }
-        .btn-save { background: var(--accent); color: white; }
-        .btn-dl { background: #334155; color: white; }
-
-        /* Logs */
-        .log-item { background: #fff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
-        .tag { font-size: 0.6rem; padding: 2px 5px; background: #dbeafe; border-radius: 4px; margin-left: 3px; font-weight: 800; }
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
+        body { font-family: 'Space Grotesk', sans-serif; background-color: #0a0a0c; color: #ffffff; overflow-x: hidden; }
+        .table-gradient { background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%); }
+        .card-border { border: 1px solid rgba(255,255,255,0.1); }
+        .manager-badge { background: linear-gradient(90deg, #0ea5e9 0%, #2563eb 100%); padding: 2px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; color: white; text-transform: uppercase; }
+        .season-tab { cursor: pointer; padding: 12px 15px; transition: all 0.3s; border-bottom: 2px solid transparent; color: #64748b; font-weight: bold; text-transform: uppercase; font-size: 11px; flex: 1; text-align: center; }
+        .season-tab.active { border-color: #0ea5e9; color: #0ea5e9; background: rgba(14, 165, 233, 0.05); }
+        .live-stat-card { background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
     </style>
 </head>
-<body>
+<body class="p-2 md:p-8">
 
-<div class="container">
-    <div class="match-setup">
-        <div class="team-cfg"><label>Team 1 Code</label><input type="text" id="t1_code" value="IND" oninput="updFN()"></div>
-        <div class="vs-badge">VS</div>
-        <div class="team-cfg"><label>Team 2 Code</label><input type="text" id="t2_code" value="PAK" oninput="updFN()"></div>
-    </div>
+    <header class="max-w-7xl mx-auto mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-end border-b border-white/10 pb-6 gap-6">
+        <div>
+            <div class="flex items-center gap-3 mb-1">
+                <h1 class="text-4xl font-bold tracking-tighter italic text-sky-500 uppercase">FQ eFootball</h1>
+                <span class="manager-badge">Official League</span>
+            </div>
+            <div class="flex flex-col gap-1">
+                <p class="text-slate-500 font-medium text-sm tracking-widest uppercase">League Director: <span class="text-white font-bold">Sinan</span></p>
+                <p class="text-sky-400/80 font-bold text-[11px] tracking-widest uppercase text-xs">Organized by FQ Organizing Committee</p>
+            </div>
+        </div>
+        <div class="flex bg-white/5 rounded-t-lg overflow-hidden w-full lg:w-auto">
+            <div id="tab-s2" onclick="switchSeason(2)" class="season-tab active">Season 2 (Live)</div>
+            <div id="tab-s1" onclick="switchSeason(1)" class="season-tab">Season 1</div>
+            <div id="tab-all" onclick="switchSeason('all')" class="season-tab">All-Time Stats</div>
+        </div>
+    </header>
 
-    <div class="tabs">
-        <div class="tab active" id="tab1" onclick="setTeam(1)">TEAM 1</div>
-        <div class="tab" id="tab2" onclick="setTeam(2)">TEAM 2</div>
-    </div>
+    <main class="max-w-7xl mx-auto pb-20">
+        <!-- SEASON 2 VIEW -->
+        <div id="season-2-view" class="space-y-6">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="live-stat-card">
+                    <p class="text-[9px] uppercase text-sky-500 font-bold tracking-widest mb-1">Top Offense (S2)</p>
+                    <h4 id="s2-stat-offense" class="text-sm font-bold text-white truncate">-</h4>
+                    <p id="s2-stat-offense-val" class="text-[10px] text-slate-500">0 Goals</p>
+                </div>
+                <div class="live-stat-card">
+                    <p class="text-[9px] uppercase text-rose-500 font-bold tracking-widest mb-1">Best Defense (S2)</p>
+                    <h4 id="s2-stat-defense" class="text-sm font-bold text-white truncate">-</h4>
+                    <p id="s2-stat-defense-val" class="text-[10px] text-slate-500">0 GA</p>
+                </div>
+                <div class="live-stat-card">
+                    <p class="text-[9px] uppercase text-emerald-500 font-bold tracking-widest mb-1">League Leader</p>
+                    <h4 id="s2-stat-wins" class="text-sm font-bold text-white truncate">-</h4>
+                    <p id="s2-stat-wins-val" class="text-[10px] text-slate-500">0 Points</p>
+                </div>
+                <div class="live-stat-card">
+                    <p class="text-[9px] uppercase text-amber-500 font-bold tracking-widest mb-1">Most Improved</p>
+                    <h4 id="s2-stat-gd" class="text-sm font-bold text-white truncate">Sevilla</h4>
+                    <p id="s2-stat-gd-val" class="text-[10px] text-slate-500">Win Streak Active</p>
+                </div>
+            </div>
 
-    <div class="grid-row">
-        <div class="input-box"><label>Country</label><select id="country" onchange="loadP()"><option value="">-- Select --</option></select></div>
-        <div class="input-box"><label>Player</label><select id="player" onchange="calc()"></select></div>
-        <div class="input-box"><label>Role</label><select id="role" onchange="calc()"><option value="bat">Batsman/AR/WK</option><option value="bowl">Pure Bowler</option></select></div>
-    </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-8">
+                    <div class="table-gradient rounded-xl card-border overflow-hidden shadow-2xl">
+                        <div class="p-4 bg-white/5 border-b border-white/10 flex justify-between items-center">
+                            <h2 class="text-xs font-bold uppercase tracking-widest text-slate-400 font-black italic">Live Standings</h2>
+                            <span class="text-[10px] font-bold text-sky-400 animate-pulse">● DATA UPDATED (MATCH 48)</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-[11px]">
+                                <thead>
+                                    <tr class="text-slate-500 text-[10px] uppercase border-b border-white/5 bg-black/40">
+                                        <th class="p-3">#</th>
+                                        <th class="p-3">Manager</th>
+                                        <th class="p-3 text-center">P</th>
+                                        <th class="p-3 text-center">W</th>
+                                        <th class="p-3 text-center">D</th>
+                                        <th class="p-3 text-center">L</th>
+                                        <th class="p-3 text-center text-sky-400">GF</th>
+                                        <th class="p-3 text-center text-rose-400">GA</th>
+                                        <th class="p-3 text-center">GD</th>
+                                        <th class="p-3 text-center text-white font-bold">Pts</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="standings-body-s2"></tbody>
+                            </table>
+                        </div>
+                    </div>
 
-    <div class="section-title">Boosters 🚀</div>
-    <div class="booster-zone">
-        <label class="check-item"><input type="checkbox" id="b_2x"> 2x Score</label>
-        <label class="check-item"><input type="checkbox" id="b_mega"> Megalomaniac</label>
-        <label class="check-item"><input type="checkbox" id="b_vacc"> Vaccinate</label>
-        <label class="check-item" style="color:var(--danger)"><input type="checkbox" id="b_rev"> REVERSE</label>
-        <label class="check-item"><input type="checkbox" id="b_comp"> Companion</label>
-        <label class="check-item"><input type="checkbox" id="b_shad"> Shadow</label>
-    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                        <div class="space-y-4">
+                            <h3 class="text-[10px] font-bold uppercase tracking-widest text-sky-500">Top Scorers (Teams)</h3>
+                            <div id="s2-attack-stats" class="space-y-2"></div>
+                        </div>
+                        <div class="space-y-4">
+                            <h3 class="text-[10px] font-bold uppercase tracking-widest text-rose-500">Defense Wall</h3>
+                            <div id="s2-defense-stats" class="space-y-2"></div>
+                        </div>
+                        <div class="space-y-4">
+                            <h3 class="text-[10px] font-bold uppercase tracking-widest text-emerald-500">Win Rate %</h3>
+                            <div id="s2-winrate-stats" class="space-y-2"></div>
+                        </div>
+                    </div>
+                </div>
 
-    <div class="section-title">Batting</div>
-    <div class="grid-row">
-        <div class="input-box"><label>Runs</label><input type="number" id="runs" value="0"></div>
-        <div class="input-box"><label>Balls</label><input type="number" id="balls" value="0"></div>
-        <div class="input-box"><label>Fours</label><input type="number" id="fours" value="0"></div>
-        <div class="input-box"><label>Sixes</label><input type="number" id="sixes" value="0"></div>
-        <label class="check-item"><input type="checkbox" id="isOut"> Got Out</label>
-        <label class="check-item"><input type="checkbox" id="duckEx"> Last Over Duck</label>
-    </div>
+                <div class="lg:col-span-4">
+                    <div class="card-border rounded-xl flex flex-col h-full bg-white/[0.02] shadow-2xl">
+                        <div class="p-4 bg-white/5 border-b border-white/10 flex justify-between items-center">
+                            <h2 class="text-xs font-bold uppercase tracking-widest text-slate-400">Match History</h2>
+                            <select id="day-select" onchange="refreshS2()" class="bg-zinc-900 text-[10px] font-bold border border-white/10 rounded px-2 py-1 outline-none text-sky-500">
+                                <option value="all">All Logs</option>
+                                <option value="latest">Latest Updates</option>
+                            </select>
+                        </div>
+                        <div id="match-container-s2" class="flex-1 overflow-y-auto p-4 space-y-3 max-h-[600px]"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <div class="section-title">Bowling</div>
-    <div class="grid-row">
-        <div class="input-box"><label>Wkts (C/S)</label><input type="number" id="wk_cs" value="0"></div>
-        <div class="input-box"><label>Wkts (B/LBW)</label><input type="number" id="wk_lb" value="0"></div>
-        <div class="input-box"><label>Overs</label><input type="number" id="overs" step="0.1" value="0"></div>
-        <div class="input-box"><label>Runs Conc.</label><input type="number" id="rc" value="0"></div>
-        <div class="input-box"><label>Dots</label><input type="number" id="dots" value="0"></div>
-        <div class="input-box"><label>Maidens</label><input type="number" id="maidens" value="0"></div>
-    </div>
-    <div class="grid-row">
-        <label class="check-item"><input type="checkbox" id="hattrick"> Hattrick</label>
-        <label class="check-item"><input type="checkbox" id="t2t"> 2 in 2 Balls</label>
-    </div>
+        <!-- SEASON 1 VIEW -->
+        <div id="season-1-view" class="hidden space-y-8">
+            <div class="table-gradient rounded-xl card-border overflow-hidden shadow-2xl">
+                <div class="p-4 bg-white/5 border-b border-white/10"><h2 class="text-xs font-bold uppercase tracking-widest text-slate-400 italic">Season 1 Final Table</h2></div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-[11px]">
+                        <thead>
+                            <tr class="text-slate-500 text-[10px] uppercase border-b border-white/5 bg-black/40">
+                                <th class="p-4">Rank</th>
+                                <th class="p-4">Manager</th>
+                                <th class="p-4 text-center">P</th>
+                                <th class="p-4 text-center">W</th>
+                                <th class="p-4 text-center">D</th>
+                                <th class="p-4 text-center">L</th>
+                                <th class="p-4 text-center text-sky-400">GF</th>
+                                <th class="p-4 text-center text-rose-400">GA</th>
+                                <th class="p-4 text-center">GD</th>
+                                <th class="p-4 text-center text-white font-bold">Pts</th>
+                            </tr>
+                        </thead>
+                        <tbody id="standings-body-s1"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-    <div class="section-title">Fielding & Outcomes</div>
-    <div class="grid-row">
-        <div class="input-box"><label>Catches</label><input type="number" id="ct" value="0"></div>
-        <div class="input-box"><label>Stumpings</label><input type="number" id="st" value="0"></div>
-        <div class="input-box"><label>RunOut (Dir)</label><input type="number" id="ro_d" value="0"></div>
-        <div class="input-box"><label>RunOut (Inv)</label><input type="number" id="ro_i" value="0"></div>
-    </div>
-    <div class="booster-zone" style="background:#f8fafc; border-color:#e2e8f0;">
+        <!-- ALL TIME VIEW -->
+        <div id="all-time-view" class="hidden space-y-8">
+             <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div class="table-gradient rounded-xl card-border overflow-hidden"><div class="p-3 bg-white/5 border-b border-white/10 text-[9px] font-bold uppercase">Career Goals</div><div id="all-gf-stats" class="divide-y divide-white/5"></div></div>
+                <div class="table-gradient rounded-xl card-border overflow-hidden"><div class="p-3 bg-white/5 border-b border-white/10 text-[9px] font-bold uppercase">Avg Defense</div><div id="all-ga-stats" class="divide-y divide-white/5"></div></div>
+                <div class="table-gradient rounded-xl card-border overflow-hidden"><div class="p-3 bg-white/5 border-b border-white/10 text-[9px] font-bold uppercase">Win Efficiency</div><div id="all-win-stats" class="divide-y divide-white/5"></div></div>
+                <div class="table-gradient rounded-xl card-border overflow-hidden"><div class="p-3 bg-white/5 border-b border-white/10 text-[9px] font-bold uppercase">Total GD</div><div id="all-gd-stats" class="divide-y divide-white/5"></div></div>
+                <div class="table-gradient rounded-xl card-border overflow-hidden"><div class="p-3 bg-white/5 border-b border-white/10 text-[9px] font-bold uppercase">Career Points</div><div id="all-pts-stats" class="divide-y divide-white/5"></div></div>
+            </div>
+
+            <div class="table-gradient rounded-xl card-border overflow-hidden shadow-2xl">
+                <div class="p-4 bg-white/5 border-b border-white/10"><h2 class="text-xs font-bold uppercase tracking-widest text-slate-400">Global Hall of Fame</h2></div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-[11px]">
+                        <thead>
+                            <tr class="text-slate-500 text-[10px] uppercase border-b border-white/5 bg-black/40">
+                                <th class="p-4">Rank</th>
+                                <th class="p-4">Manager</th>
+                                <th class="p-4 text-center">P</th>
+                                <th class="p-4 text-center">W</th>
+                                <th class="p-3 text-center">D</th>
+                                <th class="p-3 text-center">L</th>
+                                <th class="p-4 text-center text-sky-400">GF</th>
+                                <th class="p-4 text-center text-rose-400">GA</th>
+                                <th class="p-4 text-center">GD</th>
+                                <th class="p-4 text-center text-white font-bold">Pts</th>
+                            </tr>
+                        </thead>
+                        <tbody id="standings-body-all"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const TEAM_INFO = {
+            "Liverpool": { manager: "Pramadhh", emoji: "❤️" },
+            "Real Madrid": { manager: "Prajith", emoji: "🤍" },
+            "Chelsea": { manager: "Hidan", emoji: "💙" },
+            "Arsenal": { manager: "The Maverick", emoji: "❤️" },
+            "FC Barca": { manager: "Its Me SA", emoji: "💙" },
+            "Man Utd": "Shamil", // Simplified for internal logic
+            "Man City": { manager: "Saifu", emoji: "🩵" },
+            "Florentina": { manager: "Shahil", emoji: "💜" },
+            "AS Roma": { manager: "Abhijith", emoji: "🧡" },
+            "Atletico Madrid": { manager: "Muji", emoji: "❤️" },
+            "Atm": { manager: "Muji", emoji: "❤️" }, // Alias
+            "Newcastle": { manager: "Imad", emoji: "🖤" },
+            "Bayern": { manager: "Udayh", emoji: "❤️" },
+            "PSG": { manager: "Arjun", emoji: "💙" },
+            "Dortmund": { manager: "Hisham", emoji: "💛" },
+            "Dortumund": { manager: "Hisham", emoji: "💛" }, // Alias
+            "Sevilla": { manager: "Adhil", emoji: "🤍" }
+        };
+
+        // All matches from the WhatsApp history
+        const RAW_MATCHES_S2 = [
+            { id: 1, h: "Liverpool", a: "Real Madrid", s: "3-2" },
+            { id: 2, h: "Chelsea", a: "Arsenal", s: "0-5" },
+            { id: 3, h: "FC Barca", a: "Man Utd", s: "1-3" },
+            { id: 4, h: "Man City", a: "Florentina", s: "5-4" },
+            { id: 5, h: "AS Roma", a: "Atletico Madrid", s: "8-2" },
+            { id: 6, h: "Newcastle", a: "Bayern", s: "3-3" },
+            { id: 7, h: "PSG", a: "Dortmund", s: "1-2" },
+            { id: 8, h: "Man City", a: "Newcastle", s: "3-0" },
+            { id: 9, h: "Real Madrid", a: "Chelsea", s: "2-7" },
+            { id: 10, h: "Liverpool", a: "FC Barca", s: "1-0" },
+            { id: 11, h: "Dortmund", a: "Atletico Madrid", s: "3-0" },
+            { id: 12, h: "AS Roma", a: "Bayern", s: "5-1" },
+            { id: 13, h: "Florentina", a: "Sevilla", s: "3-5" },
+            { id: 14, h: "Arsenal", a: "PSG", s: "9-2" },
+            { id: 15, h: "Sevilla", a: "Man Utd", s: "9-5" },
+            { id: 16, h: "Sevilla", a: "FC Barca", s: "4-1" },
+            { id: 17, h: "Liverpool", a: "PSG", s: "4-2" },
+            { id: 18, h: "Chelsea", a: "Bayern", s: "3-4" },
+            { id: 20, h: "Man Utd", a: "Man City", s: "3-2" },
+            { id: 21, h: "Florentina", a: "AS Roma", s: "0-0" },
+            { id: 22, h: "Atletico Madrid", a: "Arsenal", s: "0-3" },
+            { id: 23, h: "PSG", a: "FC Barca", s: "3-4" },
+            { id: 24, h: "Florentina", a: "Real Madrid", s: "1-2" },
+            { id: 25, h: "Dortmund", a: "Liverpool", s: "4-0" },
+            { id: 26, h: "Chelsea", a: "Man City", s: "0-3" },
+            { id: 27, h: "Bayern", a: "Arsenal", s: "4-3" },
+            { id: 28, h: "Sevilla", a: "Atletico Madrid", s: "3-0" },
+            { id: 29, h: "AS Roma", a: "Man Utd", s: "3-4" },
+            { id: 30, h: "FC Barca", a: "Real Madrid", s: "1-4" },
+            { id: 31, h: "Man Utd", a: "Dortmund", s: "4-1" },
+            { id: 32, h: "PSG", a: "Florentina", s: "0-4" },
+            { id: 33, h: "Bayern", a: "Atletico Madrid", s: "3-0" },
+            { id: 34, h: "Sevilla", a: "Arsenal", s: "3-5" },
+            { id: 35, h: "Chelsea", a: "AS Roma", s: "0-4" },
+            { id: 36, h: "Liverpool", a: "Man City", s: "1-3" },
+            { id: 44, h: "Liverpool", a: "FC Barca", s: "3-1" },
+            { id: 45, h: "Man Utd", a: "Chelsea", s: "1-2" },
+            { id: 46, h: "Real Madrid", a: "AS Roma", s: "1-2" },
+            { id: 47, h: "Atletico Madrid", a: "Sevilla", s: "0-3" },
+            { id: 48, h: "Dortmund", a: "Bayern", s: "3-2" }
+        ];
+
+        const DATA_S1 = [
+            { name: "Hisham", mp: 9, w: 8, l: 0, d: 1, gf: 27, ga: 11, pts: 25 },
+            { name: "Imad", mp: 9, w: 6, l: 2, d: 1, gf: 31, ga: 21, pts: 19 },
+            { name: "Saifu", mp: 9, w: 5, l: 2, d: 2, gf: 25, ga: 13, pts: 17 },
+            { name: "Adhil", mp: 9, w: 5, l: 3, d: 1, gf: 30, ga: 18, pts: 16 },
+            { name: "Udayjith", mp: 9, w: 4, l: 4, d: 1, gf: 23, ga: 24, pts: 13 },
+            { name: "Abhijith", mp: 9, w: 3, l: 3, d: 3, gf: 16, ga: 16, pts: 12 },
+            { name: "Hidan", mp: 9, w: 3, l: 3, d: 3, gf: 16, ga: 19, pts: 12 },
+            { name: "Sachu", mp: 9, w: 3, l: 5, d: 1, gf: 17, ga: 21, pts: 10 },
+            { name: "Pramad", mp: 9, w: 1, l: 6, d: 2, gf: 9, ga: 22, pts: 5 },
+            { name: "Arjun", mp: 9, w: 0, l: 9, d: 0, gf: 6, ga: 39, pts: 0 }
+        ];
+
+        function getManager(team) {
+            const entry = TEAM_INFO[team];
+            if (!entry) return team;
+            if (typeof entry === 'string') return entry;
+            return entry.manager;
+        }
+
+        function getS2Table() {
+            const table = {};
+            const uniqueTeams = ["Liverpool", "Real Madrid", "Chelsea", "Arsenal", "FC Barca", "Man Utd", "Man City", "Florentina", "AS Roma", "Atletico Madrid", "Newcastle", "Bayern", "PSG", "Dortmund", "Sevilla"];
+            
+            uniqueTeams.forEach(t => table[t] = { name: t, p:0, w:0, l:0, d:0, gf:0, ga:0, pts:0, manager: getManager(t) });
+            
+            RAW_MATCHES_S2.forEach(m => {
+                const s = m.s.split('-').map(Number);
+                const hName = m.h === "Atm" ? "Atletico Madrid" : (m.h === "Dortumund" ? "Dortmund" : m.h);
+                const aName = m.a === "Atm" ? "Atletico Madrid" : (m.a === "Dortumund" ? "Dortmund" : m.a);
+                
+                const h = table[hName], a = table[aName];
+                if (!h || !a) return;
+
+                h.p++; a.p++; h.gf += s[0]; h.ga += s[1]; a.gf += s[1]; a.ga += s[0];
+                if (s[0] > s[1]) { h.pts += 3; h.w++; a.l++; } 
+                else if (s[1] > s[0]) { a.pts += 3; a.w++; h.l++; } 
+                else { h.pts++; a.pts++; h.d++; a.d++; }
+            });
+            return Object.values(table).sort((a,b) => b.pts - a.pts || (b.gf-b.ga) - (a.gf-a.ga) || b.gf - a.gf);
+        }
+
+        function refreshS2() {
+            const standings = getS2Table();
+            const active = standings.filter(p => p.p > 0);
+            
+            const topOff = [...standings].sort((a,b) => b.gf - a.gf)[0];
+            const topDef = active.length > 0 ? [...active].sort((a,b) => (a.ga/a.p) - (b.ga/b.p))[0] : null;
+            const topWins = [...standings].sort((a,b) => b.pts - a.pts)[0];
+            const topGD = [...standings].sort((a,b) => (b.gf-b.ga) - (a.gf-a.ga))[0];
+
+            document.getElementById('s2-stat-offense').innerText = topOff.manager;
+            document.getElementById('s2-stat-offense-val').innerText = `${topOff.gf} Goals Scored`;
+            document.getElementById('s2-stat-defense').innerText = topDef?.manager || "-";
+            document.getElementById('s2-stat-defense-val').innerText = `${topDef?.ga || 0} Conceded`;
+            document.getElementById('s2-stat-wins').innerText = topWins.manager;
+            document.getElementById('s2-stat-wins-val').innerText = `${topWins.pts} Total Points`;
+
+            document.getElementById('standings-body-s2').innerHTML = standings.map((t, i) => `
+                <tr class="border-b border-white/5 hover:bg-white/[0.02]">
+                    <td class="p-3 text-slate-500 font-bold">${i+1}</td>
+                    <td class="p-3 font-bold text-white">${t.manager}<br><span class="text-[9px] text-slate-500 uppercase">${t.name}</span></td>
+                    <td class="p-3 text-center">${t.p}</td>
+                    <td class="p-3 text-center text-emerald-500">${t.w}</td>
+                    <td class="p-3 text-center text-amber-500">${t.d}</td>
+                    <td class="p-3 text-center text-rose-500">${t.l}</td>
+                    <td class="p-3 text-center text-sky-400 font-bold">${t.gf}</td>
+                    <td class="p-3 text-center text-rose-400 font-bold">${t.ga}</td>
+                    <td class="p-3 text-center ${t.gf-t.ga>=0?'text-emerald-500':'text-rose-500'}">${t.gf-t.ga}</td>
+                    <td class="p-3 text-center font-black text-sky-400 text-sm">${t.pts}</td>
+                </tr>`).join('');
+
+            const buildMini = (data, sortFn, labelFn, color) => [...data].sort((a,b) => sortFn(b) - sortFn(a)).slice(0, 5).map(p => `<div class="p-2 bg-white/[0.03] rounded flex justify-between items-center"><span class="text-[10px] uppercase font-bold text-white">${p.manager}</span><span class="text-[10px] font-black ${color}">${labelFn(p)}</span></div>`).join('');
+            
+            document.getElementById('s2-attack-stats').innerHTML = buildMini(active, p => p.gf, p => p.gf + " GOALS", 'text-sky-400');
+            document.getElementById('s2-defense-stats').innerHTML = buildMini(active, p => 100 - p.ga, p => p.ga + " GA", 'text-rose-400');
+            document.getElementById('s2-winrate-stats').innerHTML = buildMini(active, p => p.w/p.p, p => Math.round((p.w/p.p)*100) + "%", 'text-emerald-400');
+
+            const container = document.getElementById('match-container-s2');
+            container.innerHTML = [...RAW_MATCHES_S2].reverse().map(m => `
+                <div class="p-3 rounded-lg border border-white/5 bg-white/5">
+                    <div class="flex justify-between items-center text-[10px] font-bold">
+                        <div class="w-[40%] text-white uppercase truncate">${m.h}</div>
+                        <div class="bg-zinc-800 text-white px-2 py-0.5 rounded font-black border border-white/10">${m.s}</div>
+                        <div class="w-[40%] text-right text-white uppercase truncate">${m.a}</div>
+                    </div>
+                    <div class="flex justify-between items-center text-[8px] text-slate-600 mt-1 italic uppercase tracking-tighter">
+                        <span>${getManager(m.h)}</span>
+                        <span>Match No: ${m.id}</span>
+                        <span>${getManager(m.a)}</span>
+                    </div>
+                </div>`).join('');
+        }
+
+        function refreshS1() {
+            document.getElementById('standings-body-s1').innerHTML = DATA_S1.map((t, i) => `
+                <tr class="border-b border-white/5 hover:bg-white/[0.02]">
+                    <td class="p-4 text-slate-500 font-bold">${i+1}</td>
+                    <td class="p-4 font-bold text-white uppercase">${t.name}</td>
+                    <td class="p-4 text-center">${t.mp}</td>
+                    <td class="p-4 text-center text-emerald-500">${t.w}</td>
+                    <td class="p-4 text-center text-amber-500">${t.d}</td>
+                    <td class="p-4 text-center text-rose-500">${t.l}</td>
+                    <td class="p-4 text-center text-sky-400 font-bold">${t.gf}</td>
+                    <td class="p-4 text-center text-rose-400 font-bold">${t.ga}</td>
+                    <td class="p-4 text-center">${t.gf-t.ga}</td>
+                    <td class="p-4 text-center font-black text-sky-400">${t.pts}</td>
+                </tr>`).join('');
+        }
+
+        function refreshAllTime() {
+            const all = {};
+            // Process S1 Data
+            DATA_S1.forEach(p => { 
+                if(!all[p.name]) all[p.name] = { name: p.name, p:0, w:0, d:0, l:0, gf:0, ga:0, pts:0 };
+                const e = all[p.name]; e.p += p.mp; e.w += p.w; e.d += p.d; e.l += p.l; e.gf += p.gf; e.ga += p.ga; e.pts += p.pts;
+            });
+            // Process S2 Data (Managers)
+            getS2Table().forEach(p => {
+                const mName = p.manager;
+                if(!all[mName]) all[mName] = { name: mName, p:0, w:0, d:0, l:0, gf:0, ga:0, pts:0 };
+                const e = all[mName]; e.p += p.p; e.w += p.w; e.d += p.d; e.l += p.l; e.gf += p.gf; e.ga += p.ga; e.pts += p.pts;
+            });
+            const sorted = Object.values(all).sort((a,b) => b.pts - a.pts || (b.gf-b.ga) - (a.gf-a.ga));
+
+            const buildRow = (data, sortFn, labelFn, color) => [...data].sort((a,b) => sortFn(b) - sortFn(a)).slice(0, 5).map(p => `
+                <div class="p-3 flex justify-between items-center bg-white/[0.01]">
+                    <span class="text-[10px] font-bold text-white uppercase">${p.name}</span>
+                    <span class="text-[10px] font-black ${color}">${labelFn(p)}</span>
+                </div>`).join('');
+            
+            document.getElementById('all-gf-stats').innerHTML = buildRow(sorted, p => p.gf, p => p.gf + " GL", 'text-sky-400');
+            document.getElementById('all-ga-stats').innerHTML = buildRow(sorted.filter(x=>x.p>0), p => 10-(p.ga/p.p), p => (p.ga/p.p).toFixed(1) + " AVG", 'text-rose-400');
+            document.getElementById('all-win-stats').innerHTML = buildRow(sorted.filter(x=>x.p>0), p => p.w/p.p, p => Math.round((p.w/p.p)*100) + "%", 'text-emerald-400');
+            document.getElementById('all-gd-stats').innerHTML = buildRow(sorted, p => p.gf-p.ga, p => (p.gf-p.ga), 'text-amber-400');
+            document.getElementById('all-pts-stats').innerHTML = buildRow(sorted, p => p.pts, p => p.pts + " PTS", 'text-white');
+
+            document.getElementById('standings-body-all').innerHTML = sorted.map((t, i) => `
+                <tr class="border-b border-white/5 hover:bg-white/[0.02]">
+                    <td class="p-4 text-slate-500 font-bold">${i+1}</td>
+                    <td class="p-4 font-bold text-white uppercase">${t.name}</td>
+                    <td class="p-4 text-center">${t.p}</td>
+                    <td class="p-4 text-center text-emerald-500 font-bold">${t.w}</td>
+                    <td class="p-4 text-center text-amber-500">${t.d}</td>
+                    <td class="p-4 text-center text-rose-500">${t.l}</td>
+                    <td class="p-4 text-center text-sky-400 font-bold">${t.gf}</td>
+                    <td class="p-4 text-center text-rose-400 font-bold">${t.ga}</td>
+                    <td class="p-4 text-center">${t.gf-t.ga}</td>
+                    <td class="p-4 text-center font-black text-sky-400">${t.pts}</td>
+                </tr>`).join('');
+        }
+
+        function switchSeason(val) {
+            document.querySelectorAll('.season-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('season-1-view').classList.add('hidden');
+            document.getElementById('season-2-view').classList.add('hidden');
+            document.getElementById('all-time-view').classList.add('hidden');
+            if (val === 1) { document.getElementById('tab-s1').classList.add('active'); document.getElementById('season-1-view').classList.remove('hidden'); refreshS1(); } 
+            else if (val === 2) { document.getElementById('tab-s2').classList.add('active'); document.getElementById('season-2-view').classList.remove('hidden'); refreshS2(); } 
+            else { document.getElementById('tab-all').classList.add('active'); document.getElementById('all-time-view').classList.remove('hidden'); refreshAllTime(); }
+        }
+
+        // Initialize on load
+        refreshS2();
+    </script>
+</body>
+</html>
+
         <label class="check-item"><input type="checkbox" id="xi" checked> Playing XI</label>
         <label class="check-item"><input type="checkbox" id="win"> Won</label>
         <label class="check-item"><input type="checkbox" id="lost"> Lost</label>
